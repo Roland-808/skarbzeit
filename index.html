@@ -376,9 +376,9 @@
 
   .display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(56px, 18vw, 84px);
-    font-weight: 500;
-    letter-spacing: -0.04em;
+    font-size: clamp(52px, 16vw, 76px);
+    font-weight: 300;
+    letter-spacing: -0.025em;
     color: var(--text);
     margin-bottom: 8px;
     font-variant-numeric: tabular-nums;
@@ -386,6 +386,46 @@
     text-align: center;
     width: 100%;
     padding: 8px 0 12px;
+    opacity: 0.92;
+  }
+  [data-theme="light"] .display {
+    color: #3a3f4a;
+  }
+  .display .sep {
+    color: inherit;
+    font-weight: 200;
+    margin: 0 0.04em;
+  }
+  .display .seg {
+    color: inherit;
+  }
+  /* Sekunden bei laufendem Timer: ganz subtiler Opacity-Puls — kein Farbwechsel */
+  .timer-panel.running .display .seg-s {
+    animation: seg-pulse 1s ease-in-out infinite;
+  }
+  @keyframes seg-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.78; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timer-panel.running .display .seg-s { animation: none; }
+  }
+
+  /* Minuten-Fortschrittsstrich am unteren Rand der Karte */
+  .timer-panel .minute-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    background: var(--accent);
+    opacity: 0.55;
+    transition: width 0.4s linear, opacity 0.3s;
+    pointer-events: none;
+  }
+  .timer-panel:not(.running) .minute-progress {
+    opacity: 0;
+    width: 0 !important;
   }
 
   .current-task {
@@ -416,6 +456,75 @@
     outline: none;
     margin-bottom: 12px;
     transition: border-color 0.15s;
+  }
+
+  .task-input-wrap {
+    position: relative;
+  }
+  .task-input-wrap .task-input {
+    margin-bottom: 0;
+  }
+  /* Wenn das Dropdown-Wrap als ganzer Block dasteht, soll der Abstand zur Notiz erhalten bleiben */
+  .task-input-wrap {
+    margin-bottom: 12px;
+  }
+
+  .task-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+  [data-theme="light"] .task-suggestions {
+    box-shadow: 0 6px 20px rgba(20,18,14,0.10);
+  }
+  .task-suggestion {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .task-suggestion:last-child { border-bottom: none; }
+  .task-suggestion:hover,
+  .task-suggestion.highlighted {
+    background: var(--bg2);
+  }
+  .task-suggestion-cat {
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--text3);
+    flex-shrink: 0;
+  }
+  .task-suggestion-cat.cat-projekt { background: #f97316; }
+  .task-suggestion-cat.cat-meeting { background: #3b82f6; }
+  .task-suggestion-cat.cat-laufend { background: #10b981; }
+  .task-suggestion-cat.cat-admin { background: #8b5cf6; }
+  .task-suggestion-cat.cat-pomodoro { background: #dc2626; }
+  .task-suggestion-cat.cat-pomopause { background: #06b6d4; }
+  .task-suggestion-cat.cat-sonstiges { background: var(--text3); }
+  .task-suggestion-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .task-suggestion-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    flex-shrink: 0;
   }
   .task-input:focus {
     border-color: var(--accent-glow);
@@ -659,6 +768,9 @@
     color: #fff;
     grid-column: span 2;
   }
+  .btn-pause {
+    grid-column: span 2;
+  }
 
   /* === Section Header === */
   .section-header {
@@ -775,11 +887,20 @@
   .pomo-display {
     font-family: 'JetBrains Mono', monospace;
     font-size: clamp(48px, 14vw, 64px);
-    font-weight: 500;
-    letter-spacing: -0.03em;
+    font-weight: 300;
+    letter-spacing: -0.02em;
     color: var(--text);
     font-variant-numeric: tabular-nums;
     line-height: 1;
+    opacity: 0.92;
+  }
+  [data-theme="light"] .pomo-display {
+    color: #3a3f4a;
+  }
+  .pomo-display .sep {
+    color: inherit;
+    font-weight: 200;
+    margin: 0 0.04em;
   }
   .pomo-task-display {
     font-size: 13px;
@@ -1300,7 +1421,10 @@
         <option value="sonstiges">Sonstiges</option>
       </select>
 
-      <input type="text" class="task-input" id="taskInput" placeholder="Aufgabe oder Prozess…" autocomplete="off">
+      <div class="task-input-wrap">
+        <input type="text" class="task-input" id="taskInput" placeholder="Aufgabe oder Prozess…" autocomplete="off">
+        <div class="task-suggestions" id="taskSuggestions" hidden></div>
+      </div>
 
       <div class="note-row">
         <textarea class="note-input" id="noteInput" placeholder="Notiz (optional)" rows="2"></textarea>
@@ -1338,7 +1462,7 @@
           <i data-lucide="play"></i>
           Starten
         </button>
-        <button class="btn" id="pauseBtn" style="display:none;">
+        <button class="btn btn-pause" id="pauseBtn" style="display:none;">
           <i data-lucide="pause" id="pauseIcon"></i>
           <span id="pauseLabel">Pause</span>
         </button>
@@ -1347,6 +1471,7 @@
           Speichern
         </button>
       </div>
+      <div class="minute-progress" id="minuteProgress"></div>
     </div>
 
     <div class="section-header">
@@ -1623,6 +1748,68 @@
     return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
   }
 
+  // Wie formatTime, aber mit Sep-Spans für gedämpfte Doppelpunkte (nur fürs Display)
+  function formatTimeDisplay(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return `<span class="seg seg-h">${pad(h)}</span><span class="sep">:</span><span class="seg seg-m">${pad(m)}</span><span class="sep">:</span><span class="seg seg-s">${pad(s)}</span>`;
+  }
+
+  // Aktualisiert die Display-Segmente und den Minuten-Fortschrittsbalken.
+  // 'force=true' rendert komplett neu (für Reset, Theme-Wechsel etc.)
+  function updateDisplay(ms, force) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const pad = n => String(n).padStart(2, '0');
+
+    let segH = display.querySelector('.seg-h');
+    let segM = display.querySelector('.seg-m');
+    let segS = display.querySelector('.seg-s');
+
+    if (force || !segH || !segM || !segS) {
+      display.innerHTML = formatTimeDisplay(ms);
+      segH = display.querySelector('.seg-h');
+      segM = display.querySelector('.seg-m');
+      segS = display.querySelector('.seg-s');
+    }
+
+    const newH = pad(h), newM = pad(m), newS = pad(s);
+    if (segH.textContent !== newH) segH.textContent = newH;
+    if (segM.textContent !== newM) segM.textContent = newM;
+    if (segS.textContent !== newS) segS.textContent = newS;
+
+    // Minuten-Fortschrittsbalken: wandert in 60s einmal durch
+    const bar = document.getElementById('minuteProgress');
+    if (bar) {
+      // Sub-Sekunden-Position innerhalb der aktuellen Minute (0..1)
+      const inMinute = (ms / 1000) % 60;
+      const pct = (inMinute / 60) * 100;
+      bar.style.width = pct + '%';
+    }
+  }
+
+  function flashSeg(el) {
+    if (!el) return;
+    el.classList.remove('flash');
+    // reflow erzwingen damit die Klasse neu greift
+    void el.offsetWidth;
+    el.classList.add('flash');
+    setTimeout(() => { el.classList.remove('flash'); }, 600);
+  }
+
+  function formatMmSsDisplay(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(m)}<span class="sep">:</span>${pad(s)}`;
+  }
+
   function formatHM(ms) {
     const total = Math.floor(ms / 1000);
     const h = Math.floor(total / 3600);
@@ -1672,7 +1859,7 @@
   function tick() {
     if (!state.running || state.paused) return;
     const elapsed = state.elapsedBeforePause + (Date.now() - state.startTime);
-    display.textContent = formatTime(elapsed);
+    updateDisplay(elapsed);
   }
 
   function startTimer() {
@@ -1695,12 +1882,14 @@
     statusText.textContent = 'Läuft';
     taskInput.disabled = true;
     categorySelect.disabled = true;
+    if (typeof hideSuggestions === 'function') hideSuggestions();
 
     startBtn.style.display = 'none';
     pauseBtn.style.display = 'flex';
     stopBtn.style.display = 'flex';
 
-    tickHandle = setInterval(tick, 500);
+    updateDisplay(0, true);
+    tickHandle = setInterval(tick, 250);
     persistRunning();
   }
 
@@ -1769,7 +1958,7 @@
     state.elapsedBeforePause = 0;
     state.currentTask = '';
 
-    display.textContent = '00:00:00';
+    updateDisplay(0, true);
     currentTaskEl.textContent = 'Keine Aufgabe ausgewählt';
     currentTaskEl.classList.add('empty');
     timerPanel.classList.remove('running');
@@ -1854,11 +2043,12 @@
         statusText.textContent = 'Pausiert';
         document.getElementById('pauseBtn').innerHTML = '<i data-lucide="play"></i><span id="pauseLabel">Fortsetzen</span>';
         if (window.lucide) lucide.createIcons();
-        display.textContent = formatTime(state.elapsedBeforePause);
+        updateDisplay(state.elapsedBeforePause, true);
       } else {
         timerPanel.classList.add('running');
         statusText.textContent = 'Läuft';
-        tickHandle = setInterval(tick, 500);
+        updateDisplay(state.elapsedBeforePause + (Date.now() - state.startTime), true);
+        tickHandle = setInterval(tick, 250);
         tick();
       }
     } catch(e) {
@@ -2517,8 +2707,141 @@
   startBtn.addEventListener('click', startTimer);
   pauseBtn.addEventListener('click', togglePause);
   stopBtn.addEventListener('click', stopTimer);
+
+  // === Aufgaben-Vorschläge (Autocomplete) ===
+  const taskSuggestions = document.getElementById('taskSuggestions');
+  let suggHighlighted = -1;
+  let suggCurrent = [];
+
+  // Häufigkeit + Letztes-Datum für Sortierung berechnen
+  function buildSuggestions(query) {
+    const q = (query || '').trim().toLowerCase();
+    const map = new Map();
+    // Pomodoro-Sessions ausschließen — sind keine echten Aufgaben
+    state.entries.forEach(e => {
+      if (e.category === 'pomodoro' || e.category === 'pomopause') return;
+      const key = e.task + '||' + (e.category || 'sonstiges');
+      if (!map.has(key)) {
+        map.set(key, { task: e.task, category: e.category || 'sonstiges', count: 0, latest: 0 });
+      }
+      const item = map.get(key);
+      item.count++;
+      if (e.start > item.latest) item.latest = e.start;
+    });
+    let arr = Array.from(map.values());
+    if (q) {
+      arr = arr.filter(it => it.task.toLowerCase().includes(q));
+    }
+    // Sortierung: zuletzt benutzt zuerst, bei Gleichstand häufiger
+    arr.sort((a, b) => b.latest - a.latest || b.count - a.count);
+    return arr.slice(0, 8);
+  }
+
+  function renderSuggestions(items) {
+    suggCurrent = items;
+    suggHighlighted = -1;
+    if (!items || items.length === 0) {
+      taskSuggestions.hidden = true;
+      taskSuggestions.innerHTML = '';
+      return;
+    }
+    taskSuggestions.innerHTML = items.map((it, i) => {
+      const ago = relativeTime(it.latest);
+      return `
+        <div class="task-suggestion" data-idx="${i}">
+          <div class="task-suggestion-cat cat-${it.category}"></div>
+          <div class="task-suggestion-text">${escapeHtml(it.task)}</div>
+          <div class="task-suggestion-meta">${ago}</div>
+        </div>
+      `;
+    }).join('');
+    taskSuggestions.hidden = false;
+  }
+
+  function relativeTime(ts) {
+    if (!ts) return '';
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'gerade';
+    if (mins < 60) return mins + ' Min';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + ' h';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + ' T';
+    if (days < 30) return Math.floor(days / 7) + ' W';
+    return Math.floor(days / 30) + ' Mo';
+  }
+
+  function applySuggestion(item) {
+    if (!item) return;
+    taskInput.value = item.task;
+    if (item.category) categorySelect.value = item.category;
+    hideSuggestions();
+    taskInput.focus();
+  }
+
+  function hideSuggestions() {
+    taskSuggestions.hidden = true;
+    suggHighlighted = -1;
+    suggCurrent = [];
+  }
+
+  function highlightSuggestion(idx) {
+    const items = taskSuggestions.querySelectorAll('.task-suggestion');
+    items.forEach(el => el.classList.remove('highlighted'));
+    if (idx >= 0 && idx < items.length) {
+      items[idx].classList.add('highlighted');
+      items[idx].scrollIntoView({ block: 'nearest' });
+      suggHighlighted = idx;
+    } else {
+      suggHighlighted = -1;
+    }
+  }
+
+  taskInput.addEventListener('focus', () => {
+    if (state.running) return;
+    renderSuggestions(buildSuggestions(taskInput.value));
+  });
+
+  taskInput.addEventListener('input', () => {
+    if (state.running) return;
+    renderSuggestions(buildSuggestions(taskInput.value));
+  });
+
   taskInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !state.running) startTimer();
+    const visible = !taskSuggestions.hidden && suggCurrent.length > 0;
+    if (e.key === 'ArrowDown' && visible) {
+      e.preventDefault();
+      highlightSuggestion(Math.min(suggHighlighted + 1, suggCurrent.length - 1));
+    } else if (e.key === 'ArrowUp' && visible) {
+      e.preventDefault();
+      highlightSuggestion(Math.max(suggHighlighted - 1, -1));
+    } else if (e.key === 'Enter') {
+      if (visible && suggHighlighted >= 0) {
+        e.preventDefault();
+        applySuggestion(suggCurrent[suggHighlighted]);
+      } else if (!state.running) {
+        startTimer();
+      }
+    } else if (e.key === 'Escape') {
+      hideSuggestions();
+    }
+  });
+
+  taskSuggestions.addEventListener('mousedown', (e) => {
+    // mousedown statt click, damit nicht das blur-Event davor zuschnappt
+    const el = e.target.closest('.task-suggestion');
+    if (!el) return;
+    e.preventDefault();
+    const idx = parseInt(el.dataset.idx, 10);
+    applySuggestion(suggCurrent[idx]);
+  });
+
+  // Bei Klick außerhalb des Wraps schließen
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.task-input-wrap')) {
+      hideSuggestions();
+    }
   });
 
   // Auto-Grow für Textareas: Höhe an Inhalt anpassen
@@ -2665,7 +2988,7 @@
     pomoEls.panel.classList.remove('phase-focus','phase-short','phase-long');
     pomoEls.phaseLabel.textContent = 'Bereit';
     pomoEls.round.textContent = `Runde ${state.pomoState.completedFocus % state.pomoSettings.cycleCount} / ${state.pomoSettings.cycleCount}`;
-    pomoEls.display.textContent = formatMmSs(state.pomoSettings.focusMin * 60000);
+    pomoEls.display.innerHTML = formatMmSsDisplay(state.pomoSettings.focusMin * 60000);
     pomoEls.taskDisplay.textContent = pomoEls.taskInput.value.trim() || 'Klicke Start';
     pomoEls.circleFg.setAttribute('stroke-dashoffset', '0');
 
@@ -2699,7 +3022,7 @@
       finishPhase();
       return;
     }
-    pomoEls.display.textContent = formatMmSs(remaining);
+    pomoEls.display.innerHTML = formatMmSsDisplay(remaining);
     const progress = Math.min(1, elapsed / state.pomoState.phaseDurationMs);
     const offset = POMO_CIRCUMFERENCE * progress;
     pomoEls.circleFg.setAttribute('stroke-dashoffset', String(offset));
@@ -2817,7 +3140,7 @@
     if (state.pomoSettings.autoNext) {
       // Direkt weiter
       renderPomoRunning();
-      pomoEls.display.textContent = formatMmSs(state.pomoState.phaseDurationMs);
+      pomoEls.display.innerHTML = formatMmSsDisplay(state.pomoState.phaseDurationMs);
       persistPomoRunning();
     } else {
       // Pause: Nutzer muss nächste Phase selbst starten
@@ -2842,7 +3165,7 @@
     pomoEls.panel.classList.add(getPhaseClass(nextPhase));
     pomoEls.phaseLabel.textContent = `${getPhaseLabel(nextPhase)} bereit`;
     pomoEls.round.textContent = `Runde ${state.pomoState.completedFocus % state.pomoSettings.cycleCount} / ${state.pomoSettings.cycleCount}`;
-    pomoEls.display.textContent = formatMmSs(getPhaseDuration(nextPhase));
+    pomoEls.display.innerHTML = formatMmSsDisplay(getPhaseDuration(nextPhase));
     pomoEls.taskDisplay.textContent = nextPhase === 'focus' ? 'Bereit für Fokus' : 'Pause';
     pomoEls.startBtn.style.display = 'flex';
     pomoEls.startBtn.querySelector('span, *:last-child');
@@ -2878,7 +3201,7 @@
     state.pomoState.paused = false;
     pomoEls.circleFg.setAttribute('stroke-dashoffset', '0');
     renderPomoRunning();
-    pomoEls.display.textContent = formatMmSs(state.pomoState.phaseDurationMs);
+    pomoEls.display.innerHTML = formatMmSsDisplay(state.pomoState.phaseDurationMs);
     persistPomoRunning();
     renderPomoToday();
     renderAll();
@@ -2975,7 +3298,7 @@
         pomoEls.panel.classList.remove('running');
         pomoEls.pauseLabel.textContent = 'Fortsetzen';
         const remaining = state.pomoState.phaseDurationMs - state.pomoState.elapsedBeforePause;
-        pomoEls.display.textContent = formatMmSs(remaining);
+        pomoEls.display.innerHTML = formatMmSsDisplay(remaining);
         const progress = state.pomoState.elapsedBeforePause / state.pomoState.phaseDurationMs;
         pomoEls.circleFg.setAttribute('stroke-dashoffset', String(POMO_CIRCUMFERENCE * progress));
       } else {
@@ -3053,6 +3376,7 @@
   // === Init ===
   if (window.lucide) lucide.createIcons();
   applyTheme();
+  updateDisplay(0, true);
   renderAll();
   restoreRunning();
   loadPomoSettingsUI();
