@@ -1,0 +1,3009 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e1018">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skarb Zeit">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<title>Skarb Zeit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    /* Dark (Skarb-Standard) */
+    --bg: #0e1018;
+    --bg2: #14171f;
+    --card: #1a1e28;
+    --card2: #232733;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.10);
+    --text: #e8eaee;
+    --text2: #a8adb5;
+    --text3: #6f7480;
+    --accent: #f97316;
+    --accent-dim: rgba(249,115,22,0.06);
+    --accent-glow: rgba(249,115,22,0.12);
+    --tag-bg: rgba(249,115,22,0.10);
+    --danger: #ef4444;
+    --success: #10b981;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f5f4;
+    --bg2: #ebeae7;
+    --card: #ffffff;
+    --card2: #f5f5f4;
+    --border: rgba(0,0,0,0.06);
+    --border2: rgba(0,0,0,0.10);
+    --text: #1a1e28;
+    --text2: #4a4f5a;
+    --text3: #8a8f9a;
+    --accent: #ea580c;
+    --accent-dim: rgba(234,88,12,0.05);
+    --accent-glow: rgba(234,88,12,0.10);
+    --tag-bg: rgba(234,88,12,0.08);
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    font-feature-settings: "ss01", "cv11";
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  /* === Lucide Icon Sizing === */
+  [data-lucide], svg.lucide {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.8;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+  .brand-icon [data-lucide], .brand-icon svg { width: 16px !important; height: 16px !important; }
+  .icon-btn [data-lucide] { width: 16px; height: 16px; }
+  .mic-btn [data-lucide] { width: 16px; height: 16px; }
+  .btn [data-lucide] { width: 14px; height: 14px; stroke-width: 2; }
+  .section-action [data-lucide] { width: 12px; height: 12px; stroke-width: 2; }
+  .detail-btn [data-lucide] { width: 12px; height: 12px; stroke-width: 2; }
+  .entry-chevron[data-lucide] {
+    width: 14px;
+    height: 14px;
+    color: var(--text3);
+    stroke-width: 2;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .entry.open .entry-chevron[data-lucide] {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+  .empty-state [data-lucide] {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    stroke-width: 1.5;
+  }
+
+  /* === Header === */
+  header {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: var(--accent-glow);
+    display: grid;
+    place-items: center;
+    color: var(--accent);
+  }
+  .brand-icon svg { width: 16px; height: 16px; }
+  .brand-text {
+    line-height: 1.1;
+  }
+  .brand-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .brand-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--text2);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .icon-btn svg { width: 15px; height: 15px; }
+  @media (hover: hover) {
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); background: var(--card); }
+  }
+  .icon-btn:active { color: var(--accent); }
+
+  .theme-slider {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-slider-track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 56px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 0 7px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .theme-slider-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 11px;
+    height: 11px;
+    color: var(--text3);
+    pointer-events: none;
+    z-index: 1;
+    transition: color 0.25s;
+  }
+  /* Aktives Icon hervorheben */
+  [data-theme="light"] .theme-slider-icon-sun { color: var(--accent); }
+  [data-theme="dark"]  .theme-slider-icon-moon { color: var(--accent); }
+
+  .theme-slider-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+  /* Im Dark-Mode: Thumb rechts (auf dem Mond) */
+  [data-theme="dark"] .theme-slider-thumb {
+    transform: translateX(28px);
+  }
+  /* Im Light-Mode: Thumb links (auf der Sonne) */
+  [data-theme="light"] .theme-slider-thumb {
+    transform: translateX(0);
+  }
+
+  @media (hover: hover) {
+    .theme-slider:hover .theme-slider-track {
+      border-color: var(--border2);
+    }
+  }
+  .theme-slider:active .theme-slider-thumb {
+    transform-origin: center;
+  }
+  [data-theme="dark"] .theme-slider:active .theme-slider-thumb {
+    transform: translateX(28px) scale(0.95);
+  }
+  [data-theme="light"] .theme-slider:active .theme-slider-thumb {
+    transform: translateX(0) scale(0.95);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .theme-slider-thumb { transition: none; }
+  }
+
+  /* === Toolbar === */
+  .toolbar {
+    padding: 0 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    background: none;
+    border: none;
+    color: var(--text3);
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .tab.active {
+    color: var(--text);
+  }
+  .tab.active::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  @media (hover: hover) {
+    .tab:hover { color: var(--text2); }
+    .tab.active:hover { color: var(--text); }
+  }
+
+  /* === Content === */
+  .content {
+    padding: 18px 20px 100px;
+  }
+
+  /* === Timer Panel === */
+  .timer-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle running indicator: thin progress line at top */
+  .timer-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+  .timer-panel.running::before {
+    width: 100%;
+    animation: progress-shimmer 2.5s ease-in-out infinite;
+  }
+  @keyframes progress-shimmer {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timer-panel.running::before { animation: none; }
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .timer-panel.running .status-dot {
+    background: var(--accent);
+  }
+  .timer-panel.running .status-dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: ping 2s infinite;
+  }
+  @keyframes ping {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .timer-panel.running .status-dot::before { animation: none; }
+  }
+  .status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .timer-panel.running .status-text { color: var(--accent); }
+
+  .display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(56px, 18vw, 84px);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-align: center;
+    width: 100%;
+    padding: 8px 0 12px;
+  }
+
+  .current-task {
+    font-size: 14px;
+    color: var(--text2);
+    min-height: 21px;
+    margin-bottom: 22px;
+    word-break: break-word;
+    text-align: center;
+  }
+  .current-task.empty { color: var(--text3); }
+
+  /* === Input === */
+  .input-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .task-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.15s;
+  }
+  .task-input:focus {
+    border-color: var(--accent-glow);
+  }
+  .task-input::placeholder { color: var(--text3); }
+  .task-input:disabled { opacity: 0.6; }
+
+  /* Alte mic-btn-Regeln entfernt — neue Regeln unter .note-actions */
+  .mic-btn.listening {
+    color: var(--accent);
+    border-color: var(--accent-glow);
+    background: var(--accent-dim);
+  }
+
+  /* Kategorie-Select */
+  .category-select {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    margin-bottom: 8px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7480' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  .category-select:focus { border-color: var(--accent-glow); }
+
+  .note-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: stretch;
+  }
+  .note-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .mic-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 44px;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .mic-svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke: currentColor;
+    fill: none;
+    pointer-events: none;
+    display: block;
+  }
+  @media (hover: hover) {
+    .mic-btn:hover { color: var(--text); border-color: var(--border2); }
+  }
+  .mic-btn.listening {
+    color: var(--accent);
+    border-color: var(--accent-glow);
+    background: var(--accent-dim);
+  }
+
+  .media-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .media-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .media-btn svg {
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  @media (hover: hover) {
+    .media-btn:hover { color: var(--text); border-color: var(--border2); }
+  }
+  .media-btn:active { color: var(--accent); border-color: var(--accent-glow); }
+
+  .attachment-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .attachment-preview:empty { display: none; }
+  .attachment-thumb {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .attachment-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .attachment-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+  }
+  .attachment-remove:hover { background: var(--accent); }
+
+  .fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: zoom-out;
+  }
+  .fullscreen-overlay img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+  .fullscreen-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .note-input {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    overflow: hidden;
+    min-height: 56px;
+    max-height: 320px;
+    line-height: 1.45;
+    transition: border-color 0.15s, height 0.1s ease-out;
+  }
+  .note-input:focus { border-color: var(--accent-glow); }
+  .note-input::placeholder { color: var(--text3); }
+  .note-input:disabled { opacity: 0.85; }
+
+  /* === Buttons === */
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    grid-column: span 2;
+  }
+  @media (hover: hover) {
+    .btn-primary:hover { background: #ea6712; }
+    .btn:hover:not(.btn-primary) { color: var(--text); border-color: var(--border2); }
+  }
+  .btn-stop {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    grid-column: span 2;
+  }
+
+  /* === Section Header === */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 20px 0 10px;
+    padding: 0 2px;
+  }
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .section-action {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .section-action svg { width: 12px; height: 12px; }
+
+  .export-buttons {
+    display: flex;
+    gap: 4px;
+  }
+  .section-action-muted {
+    color: var(--text2) !important;
+  }
+  .section-action-muted:active { color: var(--accent) !important; }
+
+  /* === Pomodoro Panel === */
+  .pomo-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 20px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pomo-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .pomo-phase-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .pomo-panel.phase-focus .pomo-phase-label { color: #dc2626; }
+  .pomo-panel.phase-short .pomo-phase-label { color: #06b6d4; }
+  .pomo-panel.phase-long .pomo-phase-label { color: #06b6d4; }
+  .pomo-round {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text3);
+  }
+
+  .pomo-circle-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 18px;
+  }
+  .pomo-circle {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .pomo-circle-bg {
+    fill: none;
+    stroke: var(--bg2);
+    stroke-width: 8;
+  }
+  .pomo-circle-fg {
+    fill: none;
+    stroke: var(--text3);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 552.92;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.4s linear, stroke 0.3s;
+  }
+  .pomo-panel.phase-focus .pomo-circle-fg { stroke: #dc2626; }
+  .pomo-panel.phase-short .pomo-circle-fg { stroke: #06b6d4; }
+  .pomo-panel.phase-long .pomo-circle-fg { stroke: #06b6d4; }
+
+  .pomo-circle-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 20px;
+  }
+  .pomo-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(48px, 14vw, 64px);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .pomo-task-display {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: 8px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 12px;
+  }
+  .pomo-panel.running .pomo-task-display { color: var(--text2); }
+
+  /* Phasen-Ende Pulse-Animation */
+  .pomo-panel.phase-end {
+    animation: phase-end-pulse 0.6s ease 3;
+  }
+  @keyframes phase-end-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.25); }
+  }
+  .pomo-panel.phase-end.was-break {
+    animation-name: phase-end-pulse-break;
+  }
+  @keyframes phase-end-pulse-break {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+    50% { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0.25); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pomo-panel.phase-end { animation: none; }
+  }
+
+  .pomo-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .pomo-actions.row-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Settings */
+  .pomo-settings {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 16px;
+    margin-bottom: 16px;
+  }
+  .pomo-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pomo-setting-row:last-child { border-bottom: none; }
+  .pomo-setting-label {
+    font-size: 14px;
+    color: var(--text);
+  }
+  .pomo-setting-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pomo-setting-input input[type="number"] {
+    width: 64px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+    text-align: right;
+    outline: none;
+  }
+  .pomo-setting-input input[type="number"]:focus { border-color: var(--accent-glow); }
+  .pomo-setting-unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-width: 56px;
+  }
+  .pomo-setting-toggles {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .pomo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .pomo-toggle input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  /* === Stats === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .stat-meta {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* === Entries === */
+  .entries {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .entry-group-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 14px 12px 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .entry-group-header span:last-child {
+    color: var(--text2);
+  }
+
+  .entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .entry:hover { background: var(--card); }
+  }
+
+  .entry-cat {
+    width: 3px;
+    height: 28px;
+    border-radius: 2px;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+  .entry-cat.cat-projekt { background: #f97316; }
+  .entry-cat.cat-meeting { background: #3b82f6; }
+  .entry-cat.cat-laufend { background: #10b981; }
+  .entry-cat.cat-admin { background: #8b5cf6; }
+  .entry-cat.cat-pomodoro { background: #dc2626; }
+  .entry-cat.cat-pomopause { background: #06b6d4; }
+  .entry-cat.cat-sonstiges { background: var(--text3); }
+
+  .entry-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .entry-task {
+    font-size: 14px;
+    color: var(--text);
+    overflow: hidden;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .entry-task-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .entry-indicator {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+  .indicator-svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    fill: none;
+    pointer-events: none;
+    display: block;
+  }
+  .entry-chevron {
+    display: flex;
+    align-items: center;
+    color: var(--text3);
+    flex-shrink: 0;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .entry-chevron-svg {
+    pointer-events: none;
+    display: block;
+  }
+  .entry.open .entry-chevron {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+  .entry-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.02em;
+  }
+  .entry-cat-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--tag-bg);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 6px;
+  }
+
+  .entry-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  .entry-chevron-old-removed { display: none; }
+
+  /* Detail-Panel */
+  .entry-detail {
+    background: var(--bg2);
+    padding: 14px 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: none;
+  }
+  .entry.open + .entry-detail { display: block; }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .detail-row .label {
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .detail-row .value {
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .detail-note-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .detail-note-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .detail-note-input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    resize: none;
+    overflow: hidden;
+    min-height: 50px;
+    max-height: 400px;
+    line-height: 1.45;
+    transition: border-color 0.15s, height 0.1s ease-out;
+  }
+  .detail-note-input:focus { border-color: var(--accent-glow); }
+  .detail-note-input::placeholder { color: var(--text3); }
+
+  .detail-attachments-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .detail-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .detail-attachments .attachment-thumb {
+    cursor: zoom-in;
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .detail-btn {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .detail-btn svg { width: 12px; height: 12px; }
+  .detail-btn:hover { color: var(--text); border-color: var(--border2); }
+  .detail-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* === Empty state === */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+  .empty-state svg {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  /* === Tab content visibility === */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* === Toast === */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: transform 0.25s ease;
+    z-index: 1000;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* iOS safe area */
+  @supports (padding: max(0px)) {
+    body {
+      padding-top: max(0px, env(safe-area-inset-top));
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+  }
+
+  /* === Statistics view === */
+  .stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  @media (hover: hover) {
+    .stats-row:hover { background: var(--card); }
+  }
+  .stats-row-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg2);
+    border-radius: 3px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+  .stats-row-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+  }
+  .stats-row-label {
+    font-size: 13px;
+    min-width: 80px;
+    color: var(--text);
+  }
+  .stats-row-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    min-width: 60px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-name">Skarb Zeit</div>
+      <div class="brand-sub">Zeit · Fokus · Notizen</div>
+    </div>
+  </div>
+  <button class="theme-slider" id="themeToggle" role="switch" aria-label="Theme wechseln" aria-checked="false">
+    <span class="theme-slider-track">
+      <span class="theme-slider-icon theme-slider-icon-sun" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </span>
+      <span class="theme-slider-icon theme-slider-icon-moon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </span>
+      <span class="theme-slider-thumb"></span>
+    </span>
+  </button>
+</header>
+
+<div class="toolbar">
+  <div class="tabs">
+    <button class="tab active" data-tab="timer">Timer</button>
+    <button class="tab" data-tab="pomodoro">Pomodoro</button>
+    <button class="tab" data-tab="verlauf">Verlauf</button>
+    <button class="tab" data-tab="auswertung">Auswertung</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Timer Tab -->
+  <div class="tab-content active" id="tab-timer">
+    <div class="timer-panel" id="timerPanel">
+      <div class="status-row">
+        <div class="status-dot"></div>
+        <div class="status-text" id="statusText">Bereit</div>
+      </div>
+      <div class="display mono" id="display">00:00:00</div>
+      <div class="current-task empty" id="currentTask">Keine Aufgabe ausgewählt</div>
+
+      <select class="category-select" id="categorySelect">
+        <option value="projekt">Projekt</option>
+        <option value="laufend">Laufender Prozess</option>
+        <option value="meeting">Besprechung</option>
+        <option value="admin">Verwaltung</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+
+      <input type="text" class="task-input" id="taskInput" placeholder="Aufgabe oder Prozess…" autocomplete="off">
+
+      <div class="note-row">
+        <textarea class="note-input" id="noteInput" placeholder="Notiz (optional)" rows="2"></textarea>
+        <button class="mic-btn" id="micBtn" aria-label="Spracheingabe in Notiz">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mic-svg">
+            <rect x="9" y="2" width="6" height="12" rx="3"/>
+            <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </button>
+      </div>
+      <div class="media-row">
+        <button class="media-btn" id="cameraBtn" aria-label="Foto aufnehmen">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          Foto
+        </button>
+        <button class="media-btn" id="galleryBtn" aria-label="Bild aus Galerie wählen">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="9" cy="9" r="2"/>
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+          Galerie
+        </button>
+      </div>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="galleryInput" accept="image/*" multiple style="display:none;">
+      <div class="attachment-preview" id="attachmentPreview"></div>
+
+      <div class="actions" id="actions">
+        <button class="btn btn-primary" id="startBtn">
+          <i data-lucide="play"></i>
+          Starten
+        </button>
+        <button class="btn" id="pauseBtn" style="display:none;">
+          <i data-lucide="pause" id="pauseIcon"></i>
+          <span id="pauseLabel">Pause</span>
+        </button>
+        <button class="btn btn-stop" id="stopBtn" style="display:none;">
+          <i data-lucide="square"></i>
+          Speichern
+        </button>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Heute</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value mono" id="todayTotal">00:00</div>
+        <div class="stat-meta" id="todayMeta">Keine Einträge</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Diese Woche</div>
+        <div class="stat-value mono" id="weekTotal">00:00</div>
+        <div class="stat-meta" id="weekMeta">KW —</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Letzte Einträge</div>
+    </div>
+    <div class="entries" id="recentEntries"></div>
+  </div>
+
+  <!-- Verlauf Tab -->
+  <div class="tab-content" id="tab-verlauf">
+    <div class="section-header">
+      <div class="section-title">Alle Einträge</div>
+      <div class="export-buttons">
+        <button class="section-action" id="exportXlsxBtn">
+          <i data-lucide="file-spreadsheet"></i>
+          Excel
+        </button>
+        <button class="section-action section-action-muted" id="exportCsvBtn">
+          <i data-lucide="download"></i>
+          CSV
+        </button>
+      </div>
+    </div>
+    <div class="entries" id="allEntries"></div>
+  </div>
+
+  <!-- Pomodoro Tab -->
+  <div class="tab-content" id="tab-pomodoro">
+    <div class="pomo-panel" id="pomoPanel">
+      <div class="pomo-status-row">
+        <div class="pomo-phase-label" id="pomoPhaseLabel">Bereit</div>
+        <div class="pomo-round" id="pomoRound">Runde 0 / 4</div>
+      </div>
+
+      <div class="pomo-circle-wrap">
+        <svg class="pomo-circle" viewBox="0 0 200 200" id="pomoCircleSvg">
+          <circle class="pomo-circle-bg" cx="100" cy="100" r="88"/>
+          <circle class="pomo-circle-fg" cx="100" cy="100" r="88" id="pomoCircleFg"/>
+        </svg>
+        <div class="pomo-circle-inner">
+          <div class="pomo-display mono" id="pomoDisplay">25:00</div>
+          <div class="pomo-task-display" id="pomoTaskDisplay">Klicke Start</div>
+        </div>
+      </div>
+
+      <input type="text" class="task-input" id="pomoTaskInput" placeholder="Worauf fokussierst du dich?" autocomplete="off">
+
+      <div class="pomo-actions" id="pomoActions">
+        <button class="btn btn-primary" id="pomoStartBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Fokus starten
+        </button>
+        <button class="btn" id="pomoPauseBtn" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span id="pomoPauseLabel">Pausieren</span>
+        </button>
+        <button class="btn btn-stop" id="pomoStopBtn" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+          Beenden
+        </button>
+        <button class="btn" id="pomoSkipBtn" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          Überspringen
+        </button>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Heute · Pomodoro</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Fokus-Zeit</div>
+        <div class="stat-value mono" id="pomoFocusToday">00:00</div>
+        <div class="stat-meta" id="pomoFocusMeta">0 Pomodori</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pausen</div>
+        <div class="stat-value mono" id="pomoBreakToday">00:00</div>
+        <div class="stat-meta" id="pomoBreakMeta">0 Pausen</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Einstellungen</div>
+      <button class="section-action" id="pomoResetSettingsBtn">Klassisch (25/5/15)</button>
+    </div>
+
+    <div class="pomo-settings">
+      <div class="pomo-setting-row">
+        <label class="pomo-setting-label">Fokus-Dauer</label>
+        <div class="pomo-setting-input">
+          <input type="number" id="pomoFocusMin" min="1" max="180" step="1">
+          <span class="pomo-setting-unit">Min</span>
+        </div>
+      </div>
+      <div class="pomo-setting-row">
+        <label class="pomo-setting-label">Kurze Pause</label>
+        <div class="pomo-setting-input">
+          <input type="number" id="pomoShortMin" min="1" max="60" step="1">
+          <span class="pomo-setting-unit">Min</span>
+        </div>
+      </div>
+      <div class="pomo-setting-row">
+        <label class="pomo-setting-label">Lange Pause</label>
+        <div class="pomo-setting-input">
+          <input type="number" id="pomoLongMin" min="1" max="120" step="1">
+          <span class="pomo-setting-unit">Min</span>
+        </div>
+      </div>
+      <div class="pomo-setting-row">
+        <label class="pomo-setting-label">Lange Pause nach</label>
+        <div class="pomo-setting-input">
+          <input type="number" id="pomoCycleCount" min="2" max="10" step="1">
+          <span class="pomo-setting-unit">Pomodori</span>
+        </div>
+      </div>
+      <div class="pomo-setting-row pomo-setting-toggles">
+        <label class="pomo-toggle">
+          <input type="checkbox" id="pomoSoundOn">
+          <span>Klang</span>
+        </label>
+        <label class="pomo-toggle">
+          <input type="checkbox" id="pomoVibrateOn">
+          <span>Vibration</span>
+        </label>
+        <label class="pomo-toggle">
+          <input type="checkbox" id="pomoAutoNext">
+          <span>Auto fortsetzen</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auswertung Tab -->
+  <div class="tab-content" id="tab-auswertung">
+    <div class="section-header">
+      <div class="section-title">Nach Kategorie · 30 Tage</div>
+    </div>
+    <div id="categoryStats"></div>
+
+    <div class="section-header">
+      <div class="section-title">Nach Aufgabe · 30 Tage</div>
+    </div>
+    <div id="taskStats"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  const CATEGORIES = {
+    projekt:    { label: 'Projekt', color: '#f97316' },
+    laufend:    { label: 'Laufender Prozess', color: '#10b981' },
+    meeting:    { label: 'Besprechung', color: '#3b82f6' },
+    admin:      { label: 'Verwaltung', color: '#8b5cf6' },
+    pomodoro:   { label: 'Pomodoro Fokus', color: '#dc2626' },
+    pomopause:  { label: 'Pomodoro Pause', color: '#06b6d4' },
+    sonstiges:  { label: 'Sonstiges', color: '#6f7480' }
+  };
+
+  // Pomodoro-Defaults (klassisch)
+  const POMO_DEFAULTS = {
+    focusMin: 25,
+    shortMin: 5,
+    longMin: 15,
+    cycleCount: 4,
+    soundOn: true,
+    vibrateOn: true,
+    autoNext: false
+  };
+
+  let state = {
+    running: false,
+    paused: false,
+    startTime: null,
+    elapsedBeforePause: 0,
+    currentTask: '',
+    currentCategory: 'projekt',
+    currentAttachments: [],
+    entries: JSON.parse(localStorage.getItem('skarb_zeit_entries') || '[]'),
+    theme: localStorage.getItem('skarb_zeit_theme') || 'dark',
+    openEntryId: null,
+    activeTab: 'timer',
+    // Pomodoro
+    pomoSettings: Object.assign({}, POMO_DEFAULTS, JSON.parse(localStorage.getItem('skarb_zeit_pomo_settings') || '{}')),
+    pomoState: {
+      running: false,
+      paused: false,
+      phase: 'focus',         // 'focus' | 'short' | 'long'
+      completedFocus: 0,      // Anzahl abgeschlossener Fokus-Phasen seit App-Start
+      phaseStartTime: null,
+      phaseDurationMs: 0,
+      elapsedBeforePause: 0,
+      task: ''
+    }
+  };
+
+  const $ = id => document.getElementById(id);
+  const display = $('display');
+  const taskInput = $('taskInput');
+  const noteInput = $('noteInput');
+  const cameraInput = $('cameraInput');
+  const galleryInput = $('galleryInput');
+  const cameraBtn = $('cameraBtn');
+  const galleryBtn = $('galleryBtn');
+  const attachmentPreview = $('attachmentPreview');
+  const categorySelect = $('categorySelect');
+  const currentTaskEl = $('currentTask');
+  const statusText = $('statusText');
+  const timerPanel = $('timerPanel');
+  const startBtn = $('startBtn');
+  const pauseBtn = $('pauseBtn');
+  const pauseLabel = $('pauseLabel');
+  const stopBtn = $('stopBtn');
+  const micBtn = $('micBtn');
+  const themeToggle = $('themeToggle');
+  const themeIcon = $('themeIcon');
+  const recentEntries = $('recentEntries');
+  const allEntries = $('allEntries');
+  const todayTotal = $('todayTotal');
+  const todayMeta = $('todayMeta');
+  const weekTotal = $('weekTotal');
+  const weekMeta = $('weekMeta');
+  const exportCsvBtn = $('exportCsvBtn');
+  const exportXlsxBtn = $('exportXlsxBtn');
+  const toast = $('toast');
+  const categoryStats = $('categoryStats');
+  const taskStats = $('taskStats');
+
+  // === Theme ===
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', state.theme === 'dark' ? '#0e1018' : '#f5f5f4');
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.setAttribute('aria-checked', state.theme === 'dark' ? 'true' : 'false');
+  }
+
+  document.getElementById('themeToggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('skarb_zeit_theme', state.theme);
+    applyTheme();
+  });
+
+  // === Time formatting ===
+  function formatTime(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
+  }
+
+  function formatHM(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  function formatDuration(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m`;
+    if (m > 0) return `${m}m`;
+    return `${total}s`;
+  }
+
+  function formatDateDE(d) {
+    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  }
+
+  function formatTimeShort(d) {
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function formatDateLong(d) {
+    const months = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    const dCopy = new Date(d); dCopy.setHours(0,0,0,0);
+    if (dCopy.getTime() === today.getTime()) return 'Heute';
+    if (dCopy.getTime() === yesterday.getTime()) return 'Gestern';
+    return `${days[d.getDay()]}, ${d.getDate()}. ${months[d.getMonth()]}`;
+  }
+
+  function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+
+  // === Timer logic ===
+  let tickHandle = null;
+
+  function tick() {
+    if (!state.running || state.paused) return;
+    const elapsed = state.elapsedBeforePause + (Date.now() - state.startTime);
+    display.textContent = formatTime(elapsed);
+  }
+
+  function startTimer() {
+    const task = taskInput.value.trim();
+    if (!task) {
+      taskInput.focus();
+      showToast('Aufgabe fehlt');
+      return;
+    }
+    state.running = true;
+    state.paused = false;
+    state.startTime = Date.now();
+    state.elapsedBeforePause = 0;
+    state.currentTask = task;
+    state.currentCategory = categorySelect.value;
+
+    currentTaskEl.textContent = task;
+    currentTaskEl.classList.remove('empty');
+    timerPanel.classList.add('running');
+    statusText.textContent = 'Läuft';
+    taskInput.disabled = true;
+    categorySelect.disabled = true;
+
+    startBtn.style.display = 'none';
+    pauseBtn.style.display = 'flex';
+    stopBtn.style.display = 'flex';
+
+    tickHandle = setInterval(tick, 500);
+    persistRunning();
+  }
+
+  function togglePause() {
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (state.paused) {
+      state.startTime = Date.now();
+      state.paused = false;
+      timerPanel.classList.add('running');
+      statusText.textContent = 'Läuft';
+      pauseBtn.innerHTML = '<i data-lucide="pause"></i><span id="pauseLabel">Pause</span>';
+    } else {
+      state.elapsedBeforePause += Date.now() - state.startTime;
+      state.paused = true;
+      timerPanel.classList.remove('running');
+      statusText.textContent = 'Pausiert';
+      pauseBtn.innerHTML = '<i data-lucide="play"></i><span id="pauseLabel">Fortsetzen</span>';
+    }
+    if (window.lucide) lucide.createIcons();
+    persistRunning();
+  }
+
+  function stopTimer() {
+    let totalElapsed = state.elapsedBeforePause;
+    if (!state.paused) {
+      totalElapsed += Date.now() - state.startTime;
+    }
+
+    if (totalElapsed < 1000) {
+      showToast('Zu kurz – verworfen');
+      resetTimer();
+      return;
+    }
+
+    const entry = {
+      id: Date.now(),
+      task: state.currentTask,
+      category: state.currentCategory,
+      note: noteInput.value.trim(),
+      attachments: state.currentAttachments.slice(),
+      duration: totalElapsed,
+      end: Date.now(),
+      start: Date.now() - totalElapsed
+    };
+    state.entries.unshift(entry);
+    try {
+      localStorage.setItem('skarb_zeit_entries', JSON.stringify(state.entries));
+    } catch (err) {
+      // Quota überschritten — Anhänge entfernen, Rest speichern
+      entry.attachments = [];
+      state.entries[0] = entry;
+      localStorage.setItem('skarb_zeit_entries', JSON.stringify(state.entries));
+      showToast('Speicher voll – Bilder verworfen');
+    }
+
+    showToast(`+${formatDuration(totalElapsed)}`);
+    resetTimer();
+    renderAll();
+  }
+
+  function resetTimer() {
+    clearInterval(tickHandle);
+    state.running = false;
+    state.paused = false;
+    state.startTime = null;
+    state.elapsedBeforePause = 0;
+    state.currentTask = '';
+
+    display.textContent = '00:00:00';
+    currentTaskEl.textContent = 'Keine Aufgabe ausgewählt';
+    currentTaskEl.classList.add('empty');
+    timerPanel.classList.remove('running');
+    statusText.textContent = 'Bereit';
+    taskInput.disabled = false;
+    categorySelect.disabled = false;
+    taskInput.value = '';
+    noteInput.value = '';
+    if (typeof autoGrow === 'function') autoGrow(noteInput);
+    state.currentAttachments = [];
+    renderAttachments();
+
+    startBtn.style.display = 'flex';
+    pauseBtn.style.display = 'none';
+    stopBtn.style.display = 'none';
+    document.getElementById('pauseBtn').innerHTML = '<i data-lucide="pause"></i><span id="pauseLabel">Pause</span>';
+    if (window.lucide) lucide.createIcons();
+
+    localStorage.removeItem('skarb_zeit_running');
+  }
+
+  function persistRunning() {
+    if (!state.running) {
+      localStorage.removeItem('skarb_zeit_running');
+      return;
+    }
+    try {
+      localStorage.setItem('skarb_zeit_running', JSON.stringify({
+        task: state.currentTask,
+        category: state.currentCategory,
+        note: noteInput.value,
+        attachments: state.currentAttachments,
+        startTime: state.startTime,
+        elapsedBeforePause: state.elapsedBeforePause,
+        paused: state.paused
+      }));
+    } catch (err) {
+      // Quota erreicht — Running-State ohne Anhänge speichern
+      try {
+        localStorage.setItem('skarb_zeit_running', JSON.stringify({
+          task: state.currentTask,
+          category: state.currentCategory,
+          note: noteInput.value,
+          attachments: [],
+          startTime: state.startTime,
+          elapsedBeforePause: state.elapsedBeforePause,
+          paused: state.paused
+        }));
+      } catch(e2) {}
+    }
+  }
+
+  function restoreRunning() {
+    const saved = localStorage.getItem('skarb_zeit_running');
+    if (!saved) return;
+    try {
+      const data = JSON.parse(saved);
+      state.running = true;
+      state.paused = data.paused;
+      state.currentTask = data.task;
+      state.currentCategory = data.category || 'projekt';
+      state.elapsedBeforePause = data.elapsedBeforePause;
+      state.startTime = data.paused ? Date.now() : data.startTime;
+
+      taskInput.value = data.task;
+      taskInput.disabled = true;
+      categorySelect.value = state.currentCategory;
+      categorySelect.disabled = true;
+      noteInput.value = data.note || '';
+      if (typeof autoGrow === 'function') autoGrow(noteInput);
+      state.currentAttachments = data.attachments || [];
+      renderAttachments();
+      currentTaskEl.textContent = data.task;
+      currentTaskEl.classList.remove('empty');
+
+      startBtn.style.display = 'none';
+      pauseBtn.style.display = 'flex';
+      stopBtn.style.display = 'flex';
+
+      if (data.paused) {
+        timerPanel.classList.remove('running');
+        statusText.textContent = 'Pausiert';
+        document.getElementById('pauseBtn').innerHTML = '<i data-lucide="play"></i><span id="pauseLabel">Fortsetzen</span>';
+        if (window.lucide) lucide.createIcons();
+        display.textContent = formatTime(state.elapsedBeforePause);
+      } else {
+        timerPanel.classList.add('running');
+        statusText.textContent = 'Läuft';
+        tickHandle = setInterval(tick, 500);
+        tick();
+      }
+    } catch(e) {
+      localStorage.removeItem('skarb_zeit_running');
+    }
+  }
+
+  // === Voice input ===
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let listening = false;
+
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'de-DE';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      // An vorhandene Notiz anhängen, statt sie zu überschreiben
+      const pre = noteInput.dataset.preMic || '';
+      const sep = pre && !pre.endsWith(' ') ? ' ' : '';
+      noteInput.value = pre + sep + transcript.trim();
+      if (typeof autoGrow === 'function') autoGrow(noteInput);
+    };
+
+    recognition.onend = () => {
+      listening = false;
+      micBtn.classList.remove('listening');
+    };
+
+    recognition.onerror = (e) => {
+      listening = false;
+      micBtn.classList.remove('listening');
+      if (e.error === 'not-allowed') showToast('Mikrofon verweigert');
+      else if (e.error !== 'no-speech' && e.error !== 'aborted') showToast('Spracheingabe Fehler');
+    };
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (!recognition) { showToast('Spracheingabe nicht verfügbar'); return; }
+    if (listening) { recognition.stop(); return; }
+    try {
+      // Bestehende Notiz nicht überschreiben — anhängen falls schon Text da ist
+      const existing = noteInput.value.trim();
+      noteInput.dataset.preMic = existing;
+      recognition.start();
+      listening = true;
+      micBtn.classList.add('listening');
+    } catch(e) {}
+  });
+
+  // === Photo / Screenshot Upload ===
+  cameraBtn.addEventListener('click', () => {
+    cameraInput.click();
+  });
+  galleryBtn.addEventListener('click', () => {
+    galleryInput.click();
+  });
+
+  async function handleFiles(files) {
+    if (!files || files.length === 0) return;
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      try {
+        const dataUrl = await compressImage(file, 1280, 0.75);
+        state.currentAttachments.push({
+          id: Date.now() + Math.random(),
+          name: file.name,
+          dataUrl: dataUrl
+        });
+      } catch (err) {
+        showToast('Bild konnte nicht geladen werden');
+      }
+    }
+    renderAttachments();
+    persistRunning();
+  }
+
+  cameraInput.addEventListener('change', async (e) => {
+    await handleFiles(Array.from(e.target.files || []));
+    cameraInput.value = '';
+  });
+
+  galleryInput.addEventListener('change', async (e) => {
+    await handleFiles(Array.from(e.target.files || []));
+    galleryInput.value = '';
+  });
+
+  // Bild komprimieren — verhindert dass localStorage volläuft
+  function compressImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round(height * maxDim / width);
+              width = maxDim;
+            } else {
+              width = Math.round(width * maxDim / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderAttachments() {
+    if (state.currentAttachments.length === 0) {
+      attachmentPreview.innerHTML = '';
+      return;
+    }
+    attachmentPreview.innerHTML = state.currentAttachments.map(a => `
+      <div class="attachment-thumb" data-att-id="${a.id}">
+        <img src="${a.dataUrl}" alt="${escapeHtml(a.name || 'Anhang')}">
+        <button class="attachment-remove" data-remove-att="${a.id}" aria-label="Entfernen">×</button>
+      </div>
+    `).join('');
+  }
+
+  attachmentPreview.addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('[data-remove-att]');
+    if (removeBtn) {
+      const id = parseFloat(removeBtn.dataset.removeAtt);
+      state.currentAttachments = state.currentAttachments.filter(a => a.id !== id);
+      renderAttachments();
+      persistRunning();
+      return;
+    }
+    // Klick aufs Bild → Vollbild öffnen
+    const thumb = e.target.closest('.attachment-thumb');
+    if (thumb) {
+      const id = parseFloat(thumb.dataset.attId);
+      const att = state.currentAttachments.find(a => a.id === id);
+      if (att) showFullscreenImage(att.dataUrl);
+    }
+  });
+
+  function showFullscreenImage(src) {
+    const overlay = document.createElement('div');
+    overlay.className = 'fullscreen-overlay';
+    overlay.innerHTML = `<img src="${src}" alt=""><button class="fullscreen-close" aria-label="Schließen">×</button>`;
+    overlay.addEventListener('click', () => overlay.remove());
+    document.body.appendChild(overlay);
+  }
+
+
+  // === Renderers ===
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderTodayWeek() {
+    const now = new Date();
+    const today = new Date(now); today.setHours(0,0,0,0);
+    const weekStart = new Date(today);
+    const dow = (today.getDay() + 6) % 7;
+    weekStart.setDate(today.getDate() - dow);
+
+    const todayEntries = state.entries.filter(e => e.start >= today.getTime());
+    const weekEntries = state.entries.filter(e => e.start >= weekStart.getTime());
+
+    const todaySum = todayEntries.reduce((s,e) => s + e.duration, 0);
+    const weekSum = weekEntries.reduce((s,e) => s + e.duration, 0);
+
+    todayTotal.textContent = formatHM(todaySum);
+    todayMeta.textContent = todayEntries.length === 0 ? 'Keine Einträge'
+      : `${todayEntries.length} ${todayEntries.length === 1 ? 'Eintrag' : 'Einträge'}`;
+
+    weekTotal.textContent = formatHM(weekSum);
+    weekMeta.textContent = `KW ${getISOWeek(now)}`;
+  }
+
+  function renderEntry(e) {
+    const startD = new Date(e.start);
+    const endD = new Date(e.end);
+    const cat = CATEGORIES[e.category] || CATEGORIES.sonstiges;
+    const isOpen = state.openEntryId === e.id;
+    const hasNote = e.note && e.note.trim().length > 0;
+    const hasAttachments = e.attachments && e.attachments.length > 0;
+
+    const NOTE_ICON_SVG = '<svg class="indicator-svg" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3z"/><path d="M15 3v6h6"/></svg>';
+    const PIC_ICON_SVG = '<svg class="indicator-svg" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+    const CHEVRON_SVG = '<svg class="entry-chevron-svg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+    return `
+      <div class="entry ${isOpen ? 'open' : ''}" data-id="${e.id}">
+        <div class="entry-cat cat-${e.category || 'sonstiges'}"></div>
+        <div class="entry-content">
+          <div class="entry-task">
+            <span class="entry-task-text">${escapeHtml(e.task)}</span>
+            ${hasNote ? `<span class="entry-indicator">${NOTE_ICON_SVG}</span>` : ''}
+            ${hasAttachments ? `<span class="entry-indicator">${PIC_ICON_SVG}</span>` : ''}
+          </div>
+          <div class="entry-meta">${formatTimeShort(startD)}–${formatTimeShort(endD)} · ${cat.label}</div>
+        </div>
+        <div class="entry-duration mono">${formatDuration(e.duration)}</div>
+        <span class="entry-chevron">${CHEVRON_SVG}</span>
+      </div>
+      <div class="entry-detail" data-detail="${e.id}">
+        <div class="detail-row"><span class="label">Datum</span><span class="value">${formatDateDE(startD)}</span></div>
+        <div class="detail-row"><span class="label">Start</span><span class="value">${formatTimeShort(startD)}</span></div>
+        <div class="detail-row"><span class="label">Ende</span><span class="value">${formatTimeShort(endD)}</span></div>
+        <div class="detail-row"><span class="label">Dauer</span><span class="value">${formatTime(e.duration)}</span></div>
+        <div class="detail-row"><span class="label">Stunden</span><span class="value">${(e.duration/3600000).toFixed(2).replace('.',',')}</span></div>
+        <div class="detail-row"><span class="label">Kategorie</span><span class="value">${cat.label}</span></div>
+        <div class="detail-note-section">
+          <div class="detail-note-label">Notiz</div>
+          <textarea class="detail-note-input" data-note="${e.id}" placeholder="Notiz hinzufügen…">${escapeHtml(e.note || '')}</textarea>
+        </div>
+        ${(e.attachments && e.attachments.length > 0) ? `
+        <div class="detail-attachments-section">
+          <div class="detail-note-label">Anhänge (${e.attachments.length})</div>
+          <div class="detail-attachments">
+            ${e.attachments.map(a => `
+              <div class="attachment-thumb" data-att-detail="${a.id}" data-entry-id="${e.id}">
+                <img src="${a.dataUrl}" alt="">
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+        <div class="detail-actions">
+          <button class="detail-btn" data-resume="${e.id}">
+            <i data-lucide="play"></i>
+            Erneut
+          </button>
+          <button class="detail-btn danger" data-delete="${e.id}">
+            <i data-lucide="trash-2"></i>
+            Löschen
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRecentEntries() {
+    const recent = state.entries.slice(0, 5);
+    if (recent.length === 0) {
+      recentEntries.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="clock"></i>
+          <div>Noch keine erfassten Zeiten</div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+    recentEntries.innerHTML = recent.map(renderEntry).join('');
+    if (window.lucide) lucide.createIcons();
+    recentEntries.querySelectorAll('.detail-note-input').forEach(ta => {
+      if (typeof autoGrow === 'function') autoGrow(ta);
+    });
+  }
+
+  function renderAllEntries() {
+    if (state.entries.length === 0) {
+      allEntries.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="calendar"></i>
+          <div>Verlauf ist leer</div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    // Group by day
+    const groups = {};
+    state.entries.forEach(e => {
+      const d = new Date(e.start);
+      d.setHours(0,0,0,0);
+      const key = d.getTime();
+      if (!groups[key]) groups[key] = { date: d, entries: [], total: 0 };
+      groups[key].entries.push(e);
+      groups[key].total += e.duration;
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a,b) => b - a);
+    let html = '';
+    sortedKeys.forEach(key => {
+      const g = groups[key];
+      html += `<div class="entry-group-header"><span>${formatDateLong(g.date)}</span><span>${formatHM(g.total)}</span></div>`;
+      html += g.entries.map(renderEntry).join('');
+    });
+
+    allEntries.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+    document.querySelectorAll('.detail-note-input').forEach(ta => {
+      if (typeof autoGrow === 'function') autoGrow(ta);
+    });
+  }
+
+  function renderStats() {
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const recent = state.entries.filter(e => e.start >= cutoff);
+
+    if (recent.length === 0) {
+      categoryStats.innerHTML = '<div class="empty-state"><div>Keine Daten in den letzten 30 Tagen</div></div>';
+      taskStats.innerHTML = '';
+      return;
+    }
+
+    // Category aggregation
+    const catTotals = {};
+    let grandTotal = 0;
+    recent.forEach(e => {
+      const c = e.category || 'sonstiges';
+      catTotals[c] = (catTotals[c] || 0) + e.duration;
+      grandTotal += e.duration;
+    });
+
+    const catSorted = Object.entries(catTotals).sort((a,b) => b[1] - a[1]);
+    categoryStats.innerHTML = catSorted.map(([cat, ms]) => {
+      const pct = (ms / grandTotal * 100).toFixed(0);
+      const c = CATEGORIES[cat] || CATEGORIES.sonstiges;
+      return `
+        <div class="stats-row">
+          <div class="stats-row-label">${c.label}</div>
+          <div class="stats-row-bar"><div class="stats-row-fill" style="width:${pct}%; background:${c.color};"></div></div>
+          <div class="stats-row-value">${formatHM(ms)} · ${pct}%</div>
+        </div>
+      `;
+    }).join('');
+
+    // Task aggregation
+    const taskTotals = {};
+    recent.forEach(e => {
+      taskTotals[e.task] = (taskTotals[e.task] || 0) + e.duration;
+    });
+    const taskSorted = Object.entries(taskTotals).sort((a,b) => b[1] - a[1]).slice(0, 10);
+    const maxTask = taskSorted[0] ? taskSorted[0][1] : 1;
+
+    taskStats.innerHTML = taskSorted.map(([task, ms]) => {
+      const pct = (ms / maxTask * 100).toFixed(0);
+      return `
+        <div class="stats-row">
+          <div class="stats-row-label" style="min-width: 0; flex:0 1 auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(task)}</div>
+          <div class="stats-row-bar"><div class="stats-row-fill" style="width:${pct}%;"></div></div>
+          <div class="stats-row-value">${formatHM(ms)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderAll() {
+    renderTodayWeek();
+    renderRecentEntries();
+    renderAllEntries();
+    renderStats();
+  }
+
+  // === Tab switching ===
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      if (target === state.activeTab) return;
+      state.activeTab = target;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${target}`));
+      // Beim Wechsel zu Pomodoro: Anzeige aktualisieren
+      if (target === 'pomodoro') {
+        if (!state.pomoState.running) renderPomoIdle();
+        renderPomoToday();
+      }
+    });
+  });
+
+  // === Entry interactions ===
+  function handleEntryClick(e) {
+    // Notiz-Textarea: nicht togglen, Eintrag offen lassen
+    if (e.target.classList.contains('detail-note-input')) {
+      e.stopPropagation();
+      return;
+    }
+
+    // Anhang-Thumb im Detail-Panel: Vollbild öffnen, nicht togglen
+    const detailThumb = e.target.closest('[data-att-detail]');
+    if (detailThumb) {
+      e.stopPropagation();
+      const attId = parseFloat(detailThumb.dataset.attDetail);
+      const entryId = parseInt(detailThumb.dataset.entryId);
+      const entry = state.entries.find(en => en.id === entryId);
+      if (entry && entry.attachments) {
+        const att = entry.attachments.find(a => a.id === attId);
+        if (att) showFullscreenImage(att.dataUrl);
+      }
+      return;
+    }
+
+    const deleteBtn = e.target.closest('[data-delete]');
+    if (deleteBtn) {
+      e.stopPropagation();
+      const id = parseInt(deleteBtn.dataset.delete);
+      if (confirm('Eintrag löschen?')) {
+        state.entries = state.entries.filter(en => en.id !== id);
+        localStorage.setItem('skarb_zeit_entries', JSON.stringify(state.entries));
+        state.openEntryId = null;
+        renderAll();
+        showToast('Gelöscht');
+      }
+      return;
+    }
+
+    const resumeBtn = e.target.closest('[data-resume]');
+    if (resumeBtn) {
+      e.stopPropagation();
+      if (state.running) { showToast('Timer läuft bereits'); return; }
+      const id = parseInt(resumeBtn.dataset.resume);
+      const entry = state.entries.find(en => en.id === id);
+      if (!entry) return;
+      taskInput.value = entry.task;
+      categorySelect.value = entry.category || 'projekt';
+      noteInput.value = entry.note || '';
+      if (typeof autoGrow === 'function') autoGrow(noteInput);
+      state.activeTab = 'timer';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'timer'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-timer'));
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      showToast('Bereit zum Starten');
+      return;
+    }
+
+    const entryEl = e.target.closest('.entry');
+    if (!entryEl) return;
+    const id = parseInt(entryEl.dataset.id);
+    state.openEntryId = state.openEntryId === id ? null : id;
+    renderRecentEntries();
+    renderAllEntries();
+  }
+
+  recentEntries.addEventListener('click', handleEntryClick);
+  allEntries.addEventListener('click', handleEntryClick);
+
+  // Notiz-Editierung in aufgeklapptem Detail speichern (blur = Fokus verloren)
+  function handleNoteEdit(ev) {
+    const ta = ev.target;
+    if (!ta.classList || !ta.classList.contains('detail-note-input')) return;
+    const id = parseInt(ta.dataset.note);
+    const entry = state.entries.find(en => en.id === id);
+    if (!entry) return;
+    const newNote = ta.value.trim();
+    if ((entry.note || '') === newNote) return;
+    entry.note = newNote;
+    localStorage.setItem('skarb_zeit_entries', JSON.stringify(state.entries));
+    showToast('Notiz gespeichert');
+    // Indikator-Icon im Listenkopf neu rendern, ohne Detail-Panel zu schließen
+    // Wir aktualisieren nur das entsprechende entry-Element
+    document.querySelectorAll(`.entry[data-id="${id}"]`).forEach(el => {
+      const taskDiv = el.querySelector('.entry-task');
+      if (!taskDiv) return;
+      const existingIcon = taskDiv.querySelector('.entry-note-icon');
+      if (newNote && !existingIcon) {
+        const icon = document.createElement('i');
+        icon.setAttribute('data-lucide', 'sticky-note');
+        icon.className = 'entry-note-icon';
+        taskDiv.appendChild(icon);
+        if (window.lucide) lucide.createIcons();
+      } else if (!newNote && existingIcon) {
+        existingIcon.remove();
+      }
+    });
+  }
+  document.addEventListener('blur', handleNoteEdit, true);
+
+  // === CSV Export ===
+  exportCsvBtn.addEventListener('click', () => {
+    if (state.entries.length === 0) { showToast('Keine Daten'); return; }
+    const header = 'Datum;Start;Ende;Dauer (Std);Dauer (HH:MM:SS);Kategorie;Aufgabe;Notiz\n';
+    const rows = state.entries.map(e => {
+      const s = new Date(e.start);
+      const en = new Date(e.end);
+      const date = formatDateDE(s);
+      const hours = (e.duration / 3600000).toFixed(2).replace('.', ',');
+      const cat = (CATEGORIES[e.category] || CATEGORIES.sonstiges).label;
+      const task = e.task.replace(/"/g, '""');
+      const note = (e.note || '').replace(/"/g, '""').replace(/\r?\n/g, ' ');
+      return `${date};${formatTimeShort(s)};${formatTimeShort(en)};${hours};${formatTime(e.duration)};${cat};"${task}";"${note}"`;
+    }).join('\n');
+
+    const csv = '\uFEFF' + header + rows;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `skarb_zeit_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('CSV exportiert');
+  });
+
+  // === Excel Export ===
+  exportXlsxBtn.addEventListener('click', () => {
+    if (state.entries.length === 0) { showToast('Keine Daten'); return; }
+    if (typeof XLSX === 'undefined') { showToast('Excel-Bibliothek nicht geladen'); return; }
+
+    // Sortiert nach Datum aufsteigend für sauberen Excel-Output
+    const sorted = [...state.entries].sort((a,b) => a.start - b.start);
+
+    // Hauptdatenblatt
+    const sheetData = [
+      ['Datum', 'Start', 'Ende', 'Dauer (Std)', 'Dauer (HH:MM:SS)', 'Kategorie', 'Aufgabe', 'Notiz']
+    ];
+    sorted.forEach(e => {
+      const s = new Date(e.start);
+      const en = new Date(e.end);
+      sheetData.push([
+        formatDateDE(s),
+        formatTimeShort(s),
+        formatTimeShort(en),
+        +(e.duration / 3600000).toFixed(2),
+        formatTime(e.duration),
+        (CATEGORIES[e.category] || CATEGORIES.sonstiges).label,
+        e.task,
+        e.note || ''
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    // Spaltenbreiten
+    ws['!cols'] = [
+      { wch: 11 }, { wch: 7 }, { wch: 7 }, { wch: 11 }, { wch: 11 },
+      { wch: 18 }, { wch: 40 }, { wch: 50 }
+    ];
+
+    // Auswertung pro Kategorie als zweites Blatt
+    const catTotals = {};
+    sorted.forEach(e => {
+      const c = (CATEGORIES[e.category] || CATEGORIES.sonstiges).label;
+      catTotals[c] = (catTotals[c] || 0) + e.duration;
+    });
+    const catSheet = [['Kategorie', 'Stunden', 'HH:MM:SS']];
+    Object.entries(catTotals)
+      .sort((a,b) => b[1] - a[1])
+      .forEach(([cat, ms]) => {
+        catSheet.push([cat, +(ms / 3600000).toFixed(2), formatTime(ms)]);
+      });
+    const totalSum = sorted.reduce((s,e) => s + e.duration, 0);
+    catSheet.push([]);
+    catSheet.push(['Gesamt', +(totalSum / 3600000).toFixed(2), formatTime(totalSum)]);
+    const wsCat = XLSX.utils.aoa_to_sheet(catSheet);
+    wsCat['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 12 }];
+
+    // Auswertung pro Aufgabe
+    const taskTotals = {};
+    sorted.forEach(e => {
+      taskTotals[e.task] = (taskTotals[e.task] || 0) + e.duration;
+    });
+    const taskSheet = [['Aufgabe', 'Stunden', 'HH:MM:SS', 'Anzahl Einträge']];
+    const taskCounts = {};
+    sorted.forEach(e => { taskCounts[e.task] = (taskCounts[e.task] || 0) + 1; });
+    Object.entries(taskTotals)
+      .sort((a,b) => b[1] - a[1])
+      .forEach(([task, ms]) => {
+        taskSheet.push([task, +(ms / 3600000).toFixed(2), formatTime(ms), taskCounts[task]]);
+      });
+    const wsTask = XLSX.utils.aoa_to_sheet(taskSheet);
+    wsTask['!cols'] = [{ wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+
+    // Workbook erstellen
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Einträge');
+    XLSX.utils.book_append_sheet(wb, wsCat, 'Kategorien');
+    XLSX.utils.book_append_sheet(wb, wsTask, 'Aufgaben');
+
+    const filename = `skarb_zeit_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast('Excel exportiert');
+  });
+
+  // === Toast ===
+  let toastTimer;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  // === Bindings ===
+  startBtn.addEventListener('click', startTimer);
+  pauseBtn.addEventListener('click', togglePause);
+  stopBtn.addEventListener('click', stopTimer);
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !state.running) startTimer();
+  });
+
+  // Auto-Grow für Textareas: Höhe an Inhalt anpassen
+  function autoGrow(textarea) {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const max = parseInt(getComputedStyle(textarea).maxHeight, 10) || 9999;
+    const scrollH = textarea.scrollHeight;
+    if (scrollH > max) {
+      textarea.style.height = max + 'px';
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.height = scrollH + 'px';
+      textarea.style.overflowY = 'hidden';
+    }
+  }
+
+  // Notiz während laufendem Timer live persistieren + auto-grow
+  noteInput.addEventListener('input', () => {
+    autoGrow(noteInput);
+    if (state.running) persistRunning();
+  });
+  // Initial-Größe falls bei Restore Text drin ist
+  autoGrow(noteInput);
+
+  // Auto-Grow auch für Detail-Notizen via Event-Delegation
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('detail-note-input')) {
+      autoGrow(e.target);
+    }
+  }, true);
+
+  // Beim Programmatic-Setzen (Speech-Recognition) auch wachsen
+  // Wir hooken auf einen MutationObserver wäre overkill — stattdessen rufen wir autoGrow manuell auf wenn nötig
+
+  // ========================================
+  // === POMODORO ===========================
+  // ========================================
+
+  const pomoEls = {
+    panel:        document.getElementById('pomoPanel'),
+    phaseLabel:   document.getElementById('pomoPhaseLabel'),
+    round:        document.getElementById('pomoRound'),
+    circleFg:     document.getElementById('pomoCircleFg'),
+    display:      document.getElementById('pomoDisplay'),
+    taskDisplay:  document.getElementById('pomoTaskDisplay'),
+    taskInput:    document.getElementById('pomoTaskInput'),
+    actions:      document.getElementById('pomoActions'),
+    startBtn:     document.getElementById('pomoStartBtn'),
+    pauseBtn:     document.getElementById('pomoPauseBtn'),
+    pauseLabel:   document.getElementById('pomoPauseLabel'),
+    stopBtn:      document.getElementById('pomoStopBtn'),
+    skipBtn:      document.getElementById('pomoSkipBtn'),
+    focusToday:   document.getElementById('pomoFocusToday'),
+    focusMeta:    document.getElementById('pomoFocusMeta'),
+    breakToday:   document.getElementById('pomoBreakToday'),
+    breakMeta:    document.getElementById('pomoBreakMeta'),
+    // Settings
+    setFocus:     document.getElementById('pomoFocusMin'),
+    setShort:     document.getElementById('pomoShortMin'),
+    setLong:      document.getElementById('pomoLongMin'),
+    setCycle:     document.getElementById('pomoCycleCount'),
+    setSound:     document.getElementById('pomoSoundOn'),
+    setVibrate:   document.getElementById('pomoVibrateOn'),
+    setAutoNext:  document.getElementById('pomoAutoNext'),
+    resetSetBtn:  document.getElementById('pomoResetSettingsBtn')
+  };
+
+  const POMO_CIRCUMFERENCE = 2 * Math.PI * 88; // r=88
+
+  let pomoTickHandle = null;
+
+  // Settings UI füllen
+  function loadPomoSettingsUI() {
+    pomoEls.setFocus.value     = state.pomoSettings.focusMin;
+    pomoEls.setShort.value     = state.pomoSettings.shortMin;
+    pomoEls.setLong.value      = state.pomoSettings.longMin;
+    pomoEls.setCycle.value     = state.pomoSettings.cycleCount;
+    pomoEls.setSound.checked   = state.pomoSettings.soundOn;
+    pomoEls.setVibrate.checked = state.pomoSettings.vibrateOn;
+    pomoEls.setAutoNext.checked= state.pomoSettings.autoNext;
+  }
+
+  function savePomoSettings() {
+    state.pomoSettings.focusMin   = clampInt(pomoEls.setFocus.value, 1, 180, 25);
+    state.pomoSettings.shortMin   = clampInt(pomoEls.setShort.value, 1, 60, 5);
+    state.pomoSettings.longMin    = clampInt(pomoEls.setLong.value, 1, 120, 15);
+    state.pomoSettings.cycleCount = clampInt(pomoEls.setCycle.value, 2, 10, 4);
+    state.pomoSettings.soundOn    = pomoEls.setSound.checked;
+    state.pomoSettings.vibrateOn  = pomoEls.setVibrate.checked;
+    state.pomoSettings.autoNext   = pomoEls.setAutoNext.checked;
+    localStorage.setItem('skarb_zeit_pomo_settings', JSON.stringify(state.pomoSettings));
+    // Display aktualisieren wenn nicht laufend
+    if (!state.pomoState.running) {
+      renderPomoIdle();
+    }
+  }
+
+  function clampInt(v, min, max, fallback) {
+    const n = parseInt(v, 10);
+    if (isNaN(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function getPhaseDuration(phase) {
+    if (phase === 'focus') return state.pomoSettings.focusMin * 60000;
+    if (phase === 'short') return state.pomoSettings.shortMin * 60000;
+    if (phase === 'long')  return state.pomoSettings.longMin  * 60000;
+    return 0;
+  }
+
+  function getPhaseLabel(phase) {
+    if (phase === 'focus') return 'Fokus';
+    if (phase === 'short') return 'Kurze Pause';
+    if (phase === 'long')  return 'Lange Pause';
+    return '';
+  }
+
+  function getPhaseClass(phase) {
+    if (phase === 'focus') return 'phase-focus';
+    if (phase === 'short') return 'phase-short';
+    if (phase === 'long')  return 'phase-long';
+    return '';
+  }
+
+  function nextPhase() {
+    // Nach Fokus: kurze oder lange Pause (je nach completedFocus)
+    if (state.pomoState.phase === 'focus') {
+      const next = (state.pomoState.completedFocus % state.pomoSettings.cycleCount === 0) ? 'long' : 'short';
+      return next;
+    }
+    return 'focus';
+  }
+
+  function formatMmSs(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderPomoIdle() {
+    pomoEls.panel.classList.remove('running');
+    pomoEls.panel.classList.remove('phase-focus','phase-short','phase-long');
+    pomoEls.phaseLabel.textContent = 'Bereit';
+    pomoEls.round.textContent = `Runde ${state.pomoState.completedFocus % state.pomoSettings.cycleCount} / ${state.pomoSettings.cycleCount}`;
+    pomoEls.display.textContent = formatMmSs(state.pomoSettings.focusMin * 60000);
+    pomoEls.taskDisplay.textContent = pomoEls.taskInput.value.trim() || 'Klicke Start';
+    pomoEls.circleFg.setAttribute('stroke-dashoffset', '0');
+
+    pomoEls.startBtn.style.display = 'flex';
+    pomoEls.pauseBtn.style.display = 'none';
+    pomoEls.stopBtn.style.display = 'none';
+    pomoEls.skipBtn.style.display = 'none';
+    pomoEls.actions.classList.remove('row-2');
+  }
+
+  function renderPomoRunning() {
+    pomoEls.panel.classList.add('running');
+    pomoEls.panel.classList.remove('phase-focus','phase-short','phase-long');
+    pomoEls.panel.classList.add(getPhaseClass(state.pomoState.phase));
+    pomoEls.phaseLabel.textContent = getPhaseLabel(state.pomoState.phase);
+    pomoEls.round.textContent = `Runde ${(state.pomoState.completedFocus % state.pomoSettings.cycleCount) + (state.pomoState.phase==='focus'?1:0)} / ${state.pomoSettings.cycleCount}`;
+    pomoEls.taskDisplay.textContent = state.pomoState.task || (state.pomoState.phase === 'focus' ? 'Fokus' : 'Pause');
+
+    pomoEls.startBtn.style.display = 'none';
+    pomoEls.pauseBtn.style.display = 'flex';
+    pomoEls.stopBtn.style.display = 'flex';
+    pomoEls.skipBtn.style.display = 'flex';
+    pomoEls.actions.classList.add('row-2');
+  }
+
+  function tickPomo() {
+    if (!state.pomoState.running || state.pomoState.paused) return;
+    const elapsed = state.pomoState.elapsedBeforePause + (Date.now() - state.pomoState.phaseStartTime);
+    const remaining = state.pomoState.phaseDurationMs - elapsed;
+    if (remaining <= 0) {
+      finishPhase();
+      return;
+    }
+    pomoEls.display.textContent = formatMmSs(remaining);
+    const progress = Math.min(1, elapsed / state.pomoState.phaseDurationMs);
+    const offset = POMO_CIRCUMFERENCE * progress;
+    pomoEls.circleFg.setAttribute('stroke-dashoffset', String(offset));
+  }
+
+  function startPomo() {
+    const task = pomoEls.taskInput.value.trim();
+    if (state.pomoState.phase === 'focus' && !task) {
+      pomoEls.taskInput.focus();
+      showToast('Fokus-Aufgabe eingeben');
+      return;
+    }
+
+    state.pomoState.running = true;
+    state.pomoState.paused = false;
+    state.pomoState.task = task;
+    state.pomoState.phaseStartTime = Date.now();
+    state.pomoState.elapsedBeforePause = 0;
+    state.pomoState.phaseDurationMs = getPhaseDuration(state.pomoState.phase);
+
+    pomoEls.taskInput.disabled = true;
+    renderPomoRunning();
+    persistPomoRunning();
+
+    pomoTickHandle = setInterval(tickPomo, 250);
+    tickPomo();
+  }
+
+  function pausePomo() {
+    if (state.pomoState.paused) {
+      state.pomoState.phaseStartTime = Date.now();
+      state.pomoState.paused = false;
+      pomoEls.panel.classList.add('running');
+      pomoEls.pauseLabel.textContent = 'Pausieren';
+    } else {
+      state.pomoState.elapsedBeforePause += Date.now() - state.pomoState.phaseStartTime;
+      state.pomoState.paused = true;
+      pomoEls.panel.classList.remove('running');
+      pomoEls.pauseLabel.textContent = 'Fortsetzen';
+    }
+    persistPomoRunning();
+  }
+
+  function stopPomo(saveCurrentPhase = true) {
+    // Aktuelle Phase als Eintrag speichern wenn lang genug
+    if (saveCurrentPhase) {
+      let elapsed = state.pomoState.elapsedBeforePause;
+      if (!state.pomoState.paused) {
+        elapsed += Date.now() - state.pomoState.phaseStartTime;
+      }
+      saveAsPomoEntry(elapsed);
+    }
+    clearInterval(pomoTickHandle);
+    state.pomoState.running = false;
+    state.pomoState.paused = false;
+    state.pomoState.phase = 'focus';
+    state.pomoState.phaseStartTime = null;
+    state.pomoState.elapsedBeforePause = 0;
+    state.pomoState.task = '';
+    pomoEls.taskInput.disabled = false;
+    pomoEls.taskInput.value = '';
+    localStorage.removeItem('skarb_zeit_pomo_running');
+    renderPomoIdle();
+    renderPomoToday();
+    renderAll();
+  }
+
+  function saveAsPomoEntry(durationMs) {
+    if (durationMs < 5000) return; // < 5s: nicht speichern
+    const phase = state.pomoState.phase;
+    const cat = phase === 'focus' ? 'pomodoro' : 'pomopause';
+    const taskName = phase === 'focus'
+      ? (state.pomoState.task || 'Fokus-Sitzung')
+      : (phase === 'short' ? 'Kurze Pause' : 'Lange Pause');
+
+    const entry = {
+      id: Date.now() + Math.random(),
+      task: taskName,
+      category: cat,
+      note: '',
+      attachments: [],
+      duration: durationMs,
+      end: Date.now(),
+      start: Date.now() - durationMs
+    };
+    state.entries.unshift(entry);
+    try {
+      localStorage.setItem('skarb_zeit_entries', JSON.stringify(state.entries));
+    } catch (err) {
+      // Quota: Notfall-Speicherung ohne Spezial-Daten
+    }
+  }
+
+  function finishPhase() {
+    // Phase ist beendet — speichern, signalisieren, ggf. zur nächsten Phase
+    saveAsPomoEntry(state.pomoState.phaseDurationMs);
+
+    const wasBreak = state.pomoState.phase !== 'focus';
+    if (state.pomoState.phase === 'focus') {
+      state.pomoState.completedFocus++;
+    }
+
+    // Signalisierung
+    triggerPhaseEndAlert(wasBreak);
+
+    // Nächste Phase bestimmen
+    const next = nextPhase();
+    state.pomoState.phase = next;
+    state.pomoState.phaseDurationMs = getPhaseDuration(next);
+    state.pomoState.phaseStartTime = Date.now();
+    state.pomoState.elapsedBeforePause = 0;
+
+    pomoEls.circleFg.setAttribute('stroke-dashoffset', '0');
+
+    if (state.pomoSettings.autoNext) {
+      // Direkt weiter
+      renderPomoRunning();
+      pomoEls.display.textContent = formatMmSs(state.pomoState.phaseDurationMs);
+      persistPomoRunning();
+    } else {
+      // Pause: Nutzer muss nächste Phase selbst starten
+      clearInterval(pomoTickHandle);
+      state.pomoState.running = false;
+      state.pomoState.paused = false;
+      pomoEls.taskInput.disabled = false;
+      // Aufgabe für nächste Fokusphase wieder editierbar; bei Pause→Fokus übernehmen wir alten Task
+      if (next === 'focus') {
+        pomoEls.taskInput.value = state.pomoState.task || '';
+      }
+      localStorage.removeItem('skarb_zeit_pomo_running');
+      renderPomoNextReady(next);
+      renderPomoToday();
+      renderAll();
+    }
+  }
+
+  function renderPomoNextReady(nextPhase) {
+    pomoEls.panel.classList.remove('running');
+    pomoEls.panel.classList.remove('phase-focus','phase-short','phase-long');
+    pomoEls.panel.classList.add(getPhaseClass(nextPhase));
+    pomoEls.phaseLabel.textContent = `${getPhaseLabel(nextPhase)} bereit`;
+    pomoEls.round.textContent = `Runde ${state.pomoState.completedFocus % state.pomoSettings.cycleCount} / ${state.pomoSettings.cycleCount}`;
+    pomoEls.display.textContent = formatMmSs(getPhaseDuration(nextPhase));
+    pomoEls.taskDisplay.textContent = nextPhase === 'focus' ? 'Bereit für Fokus' : 'Pause';
+    pomoEls.startBtn.style.display = 'flex';
+    pomoEls.startBtn.querySelector('span, *:last-child');
+    // Button-Text anpassen
+    const startTextNode = pomoEls.startBtn.childNodes[pomoEls.startBtn.childNodes.length - 1];
+    if (startTextNode && startTextNode.nodeType === Node.TEXT_NODE) {
+      startTextNode.nodeValue = nextPhase === 'focus' ? ' Fokus starten' : ` ${getPhaseLabel(nextPhase)} starten`;
+    } else {
+      // Fallback: ganzen Button-Inhalt setzen mit Icon
+      pomoEls.startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ${nextPhase === 'focus' ? 'Fokus starten' : getPhaseLabel(nextPhase) + ' starten'}`;
+    }
+    pomoEls.pauseBtn.style.display = 'none';
+    pomoEls.stopBtn.style.display = 'flex';
+    pomoEls.skipBtn.style.display = 'none';
+    pomoEls.actions.classList.add('row-2');
+  }
+
+  function skipPhase() {
+    // Aktuelle Phase mit bisheriger Dauer als Eintrag, dann zur nächsten Phase
+    let elapsed = state.pomoState.elapsedBeforePause;
+    if (!state.pomoState.paused) {
+      elapsed += Date.now() - state.pomoState.phaseStartTime;
+    }
+    saveAsPomoEntry(elapsed);
+    if (state.pomoState.phase === 'focus') {
+      state.pomoState.completedFocus++;
+    }
+    const next = nextPhase();
+    state.pomoState.phase = next;
+    state.pomoState.phaseDurationMs = getPhaseDuration(next);
+    state.pomoState.phaseStartTime = Date.now();
+    state.pomoState.elapsedBeforePause = 0;
+    state.pomoState.paused = false;
+    pomoEls.circleFg.setAttribute('stroke-dashoffset', '0');
+    renderPomoRunning();
+    pomoEls.display.textContent = formatMmSs(state.pomoState.phaseDurationMs);
+    persistPomoRunning();
+    renderPomoToday();
+    renderAll();
+  }
+
+  // === Phase-End Signalisierung ===
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (audioCtx) return audioCtx;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { audioCtx = null; }
+    return audioCtx;
+  }
+
+  function playGong(isBreak) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    // Drei harmonische Töne als sanfter Gong
+    const baseFreq = isBreak ? 523.25 : 392.00; // C5 für Pause, G4 für Fokus-Ende
+    const freqs = [baseFreq, baseFreq * 1.5, baseFreq * 2];
+    const now = ctx.currentTime;
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const startT = now + i * 0.18;
+      gain.gain.setValueAtTime(0, startT);
+      gain.gain.linearRampToValueAtTime(0.18, startT + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 1.5);
+      osc.start(startT);
+      osc.stop(startT + 1.6);
+    });
+  }
+
+  function triggerPhaseEndAlert(wasBreak) {
+    // Visuelle Animation
+    pomoEls.panel.classList.toggle('was-break', wasBreak);
+    pomoEls.panel.classList.add('phase-end');
+    setTimeout(() => pomoEls.panel.classList.remove('phase-end'), 1900);
+
+    // Klang
+    if (state.pomoSettings.soundOn) {
+      try { playGong(wasBreak); } catch(e) {}
+    }
+    // Vibration (Handy)
+    if (state.pomoSettings.vibrateOn && navigator.vibrate) {
+      navigator.vibrate(wasBreak ? [200, 100, 200] : [400, 150, 400, 150, 400]);
+    }
+    // Toast
+    showToast(wasBreak ? 'Pause vorbei – weiter geht\'s!' : 'Pomodoro fertig – Pause!');
+  }
+
+  // === Persistenz für laufendem Pomodoro ===
+  function persistPomoRunning() {
+    if (!state.pomoState.running) {
+      localStorage.removeItem('skarb_zeit_pomo_running');
+      return;
+    }
+    localStorage.setItem('skarb_zeit_pomo_running', JSON.stringify({
+      phase: state.pomoState.phase,
+      completedFocus: state.pomoState.completedFocus,
+      phaseStartTime: state.pomoState.phaseStartTime,
+      phaseDurationMs: state.pomoState.phaseDurationMs,
+      elapsedBeforePause: state.pomoState.elapsedBeforePause,
+      paused: state.pomoState.paused,
+      task: state.pomoState.task
+    }));
+  }
+
+  function restorePomoRunning() {
+    const saved = localStorage.getItem('skarb_zeit_pomo_running');
+    if (!saved) { renderPomoIdle(); renderPomoToday(); return; }
+    try {
+      const data = JSON.parse(saved);
+      state.pomoState.running = true;
+      state.pomoState.phase = data.phase;
+      state.pomoState.completedFocus = data.completedFocus || 0;
+      state.pomoState.phaseDurationMs = data.phaseDurationMs;
+      state.pomoState.elapsedBeforePause = data.elapsedBeforePause || 0;
+      state.pomoState.paused = data.paused;
+      state.pomoState.task = data.task || '';
+      state.pomoState.phaseStartTime = data.paused ? Date.now() : data.phaseStartTime;
+
+      pomoEls.taskInput.value = data.task || '';
+      pomoEls.taskInput.disabled = true;
+      renderPomoRunning();
+
+      if (data.paused) {
+        pomoEls.panel.classList.remove('running');
+        pomoEls.pauseLabel.textContent = 'Fortsetzen';
+        const remaining = state.pomoState.phaseDurationMs - state.pomoState.elapsedBeforePause;
+        pomoEls.display.textContent = formatMmSs(remaining);
+        const progress = state.pomoState.elapsedBeforePause / state.pomoState.phaseDurationMs;
+        pomoEls.circleFg.setAttribute('stroke-dashoffset', String(POMO_CIRCUMFERENCE * progress));
+      } else {
+        // Check ob Phase schon abgelaufen ist während App zu war
+        const elapsed = state.pomoState.elapsedBeforePause + (Date.now() - state.pomoState.phaseStartTime);
+        if (elapsed >= state.pomoState.phaseDurationMs) {
+          // Während App zu war wurde Phase fertig — nachträglich Phase-Ende ausführen
+          finishPhase();
+        } else {
+          pomoTickHandle = setInterval(tickPomo, 250);
+          tickPomo();
+        }
+      }
+    } catch(e) {
+      localStorage.removeItem('skarb_zeit_pomo_running');
+      renderPomoIdle();
+    }
+    renderPomoToday();
+  }
+
+  // Heute-Stats für Pomodoro
+  function renderPomoToday() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayPomo = state.entries.filter(e =>
+      e.start >= today.getTime() && (e.category === 'pomodoro' || e.category === 'pomopause')
+    );
+    const focus = todayPomo.filter(e => e.category === 'pomodoro');
+    const breaks = todayPomo.filter(e => e.category === 'pomopause');
+    const focusSum = focus.reduce((s,e) => s + e.duration, 0);
+    const breakSum = breaks.reduce((s,e) => s + e.duration, 0);
+
+    pomoEls.focusToday.textContent = formatHM(focusSum);
+    pomoEls.focusMeta.textContent = `${focus.length} ${focus.length === 1 ? 'Pomodoro' : 'Pomodori'}`;
+    pomoEls.breakToday.textContent = formatHM(breakSum);
+    pomoEls.breakMeta.textContent = `${breaks.length} ${breaks.length === 1 ? 'Pause' : 'Pausen'}`;
+  }
+
+  // Event-Bindings Pomodoro
+  pomoEls.startBtn.addEventListener('click', startPomo);
+  pomoEls.pauseBtn.addEventListener('click', pausePomo);
+  pomoEls.stopBtn.addEventListener('click', () => stopPomo(true));
+  pomoEls.skipBtn.addEventListener('click', skipPhase);
+
+  // Settings: bei Änderung speichern
+  ['setFocus','setShort','setLong','setCycle'].forEach(key => {
+    pomoEls[key].addEventListener('change', savePomoSettings);
+    pomoEls[key].addEventListener('blur', savePomoSettings);
+  });
+  ['setSound','setVibrate','setAutoNext'].forEach(key => {
+    pomoEls[key].addEventListener('change', savePomoSettings);
+  });
+  pomoEls.resetSetBtn.addEventListener('click', () => {
+    state.pomoSettings = Object.assign({}, POMO_DEFAULTS);
+    loadPomoSettingsUI();
+    savePomoSettings();
+    showToast('Klassisch: 25/5/15');
+  });
+
+  // Audio-Context entsperren beim ersten User-Input
+  document.addEventListener('click', function unlockAudio() {
+    ensureAudio();
+    document.removeEventListener('click', unlockAudio);
+  }, { once: true });
+
+  // ========================================
+  // === END POMODORO =======================
+  // ========================================
+
+
+  // Periodic update for today/week totals while running
+  setInterval(() => {
+    if (state.running && !state.paused) renderTodayWeek();
+  }, 30000);
+
+  // === Init ===
+  if (window.lucide) lucide.createIcons();
+  applyTheme();
+  renderAll();
+  restoreRunning();
+  loadPomoSettingsUI();
+  restorePomoRunning();
+
+})();
+</script>
+</body>
+</html>
