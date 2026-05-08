@@ -395,6 +395,8 @@
     color: inherit;
     font-weight: 200;
     margin: 0 0.04em;
+    display: inline-block;
+    transform: translateY(-0.10em);
   }
   .display .seg {
     color: inherit;
@@ -772,6 +774,46 @@
     grid-column: span 2;
   }
 
+  /* === Period-Tabs (Auswertung) === */
+  .period-tabs {
+    display: flex;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 14px;
+    gap: 2px;
+  }
+  .period-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    padding: 8px 4px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .period-tab.active {
+    background: var(--card);
+    color: var(--text);
+  }
+  @media (hover: hover) {
+    .period-tab:hover:not(.active) { color: var(--text); }
+  }
+  .period-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin: 0 2px 10px;
+    padding-top: 4px;
+  }
+
   /* === Section Header === */
   .section-header {
     display: flex;
@@ -901,6 +943,8 @@
     color: inherit;
     font-weight: 200;
     margin: 0 0.04em;
+    display: inline-block;
+    transform: translateY(-0.10em);
   }
   .pomo-task-display {
     font-size: 13px;
@@ -1473,28 +1517,6 @@
       </div>
       <div class="minute-progress" id="minuteProgress"></div>
     </div>
-
-    <div class="section-header">
-      <div class="section-title">Heute</div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Gesamt</div>
-        <div class="stat-value mono" id="todayTotal">00:00</div>
-        <div class="stat-meta" id="todayMeta">Keine Einträge</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Diese Woche</div>
-        <div class="stat-value mono" id="weekTotal">00:00</div>
-        <div class="stat-meta" id="weekMeta">KW —</div>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <div class="section-title">Letzte Einträge</div>
-    </div>
-    <div class="entries" id="recentEntries"></div>
   </div>
 
   <!-- Verlauf Tab -->
@@ -1626,13 +1648,35 @@
 
   <!-- Auswertung Tab -->
   <div class="tab-content" id="tab-auswertung">
+    <div class="period-tabs">
+      <button class="period-tab active" data-period="day">Tag</button>
+      <button class="period-tab" data-period="week">Woche</button>
+      <button class="period-tab" data-period="month">Monat</button>
+      <button class="period-tab" data-period="year">Jahr</button>
+    </div>
+
+    <div class="period-label" id="periodLabel">Heute</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value mono" id="periodTotal">00:00</div>
+        <div class="stat-meta" id="periodMeta">Keine Einträge</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Im Schnitt</div>
+        <div class="stat-value mono" id="periodAvg">00:00</div>
+        <div class="stat-meta" id="periodAvgMeta">pro Eintrag</div>
+      </div>
+    </div>
+
     <div class="section-header">
-      <div class="section-title">Nach Kategorie · 30 Tage</div>
+      <div class="section-title" id="categoryStatsTitle">Nach Kategorie</div>
     </div>
     <div id="categoryStats"></div>
 
     <div class="section-header">
-      <div class="section-title">Nach Aufgabe · 30 Tage</div>
+      <div class="section-title" id="taskStatsTitle">Nach Aufgabe</div>
     </div>
     <div id="taskStats"></div>
   </div>
@@ -1678,6 +1722,7 @@
     theme: localStorage.getItem('skarb_zeit_theme') || 'dark',
     openEntryId: null,
     activeTab: 'timer',
+    activePeriod: 'day',  // 'day' | 'week' | 'month' | 'year'
     // Pomodoro
     pomoSettings: Object.assign({}, POMO_DEFAULTS, JSON.parse(localStorage.getItem('skarb_zeit_pomo_settings') || '{}')),
     pomoState: {
@@ -1712,12 +1757,14 @@
   const micBtn = $('micBtn');
   const themeToggle = $('themeToggle');
   const themeIcon = $('themeIcon');
-  const recentEntries = $('recentEntries');
   const allEntries = $('allEntries');
-  const todayTotal = $('todayTotal');
-  const todayMeta = $('todayMeta');
-  const weekTotal = $('weekTotal');
-  const weekMeta = $('weekMeta');
+  const periodTotal = $('periodTotal');
+  const periodMeta = $('periodMeta');
+  const periodAvg = $('periodAvg');
+  const periodAvgMeta = $('periodAvgMeta');
+  const periodLabel = $('periodLabel');
+  const categoryStatsTitle = $('categoryStatsTitle');
+  const taskStatsTitle = $('taskStatsTitle');
   const exportCsvBtn = $('exportCsvBtn');
   const exportXlsxBtn = $('exportXlsxBtn');
   const toast = $('toast');
@@ -2275,25 +2322,59 @@
     return div.innerHTML;
   }
 
-  function renderTodayWeek() {
+  // Liefert Start/Ende des aktuellen Zeitraums + Label
+  function getPeriodRange(period) {
     const now = new Date();
-    const today = new Date(now); today.setHours(0,0,0,0);
-    const weekStart = new Date(today);
-    const dow = (today.getDay() + 6) % 7;
-    weekStart.setDate(today.getDate() - dow);
+    const start = new Date(now);
+    let label;
 
-    const todayEntries = state.entries.filter(e => e.start >= today.getTime());
-    const weekEntries = state.entries.filter(e => e.start >= weekStart.getTime());
+    if (period === 'day') {
+      start.setHours(0, 0, 0, 0);
+      const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+      label = `Heute · ${start.getDate()}. ${months[start.getMonth()]} ${start.getFullYear()}`;
+    } else if (period === 'week') {
+      start.setHours(0, 0, 0, 0);
+      const dow = (start.getDay() + 6) % 7; // 0=Mo
+      start.setDate(start.getDate() - dow);
+      label = `Diese Woche · KW ${getISOWeek(now)}`;
+    } else if (period === 'month') {
+      start.setHours(0, 0, 0, 0);
+      start.setDate(1);
+      const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+      label = `${months[start.getMonth()]} ${start.getFullYear()}`;
+    } else if (period === 'year') {
+      start.setHours(0, 0, 0, 0);
+      start.setMonth(0, 1);
+      label = `Jahr ${start.getFullYear()}`;
+    }
 
-    const todaySum = todayEntries.reduce((s,e) => s + e.duration, 0);
-    const weekSum = weekEntries.reduce((s,e) => s + e.duration, 0);
+    return { start: start.getTime(), end: now.getTime(), label };
+  }
 
-    todayTotal.textContent = formatHM(todaySum);
-    todayMeta.textContent = todayEntries.length === 0 ? 'Keine Einträge'
-      : `${todayEntries.length} ${todayEntries.length === 1 ? 'Eintrag' : 'Einträge'}`;
+  // Aktualisiert die Übersichts-Karten + Sektion-Titel auf Basis der gewählten Periode
+  function renderPeriodStats() {
+    const period = state.activePeriod || 'day';
+    const range = getPeriodRange(period);
 
-    weekTotal.textContent = formatHM(weekSum);
-    weekMeta.textContent = `KW ${getISOWeek(now)}`;
+    // Pomodoro-Pausen aus den Stats raushalten — sie verwässern die Auswertung
+    const entries = state.entries.filter(e =>
+      e.start >= range.start && e.start <= range.end &&
+      e.category !== 'pomopause'
+    );
+    const totalSum = entries.reduce((s,e) => s + e.duration, 0);
+    const avg = entries.length > 0 ? Math.round(totalSum / entries.length) : 0;
+
+    periodLabel.textContent = range.label;
+    periodTotal.textContent = formatHM(totalSum);
+    periodMeta.textContent = entries.length === 0 ? 'Keine Einträge'
+      : `${entries.length} ${entries.length === 1 ? 'Eintrag' : 'Einträge'}`;
+    periodAvg.textContent = formatHM(avg);
+    periodAvgMeta.textContent = entries.length === 0 ? '—' : 'pro Eintrag';
+
+    // Sektion-Titel mit Periode
+    const periodLabels = { day: 'Heute', week: 'Diese Woche', month: 'Dieser Monat', year: 'Dieses Jahr' };
+    categoryStatsTitle.textContent = `Nach Kategorie · ${periodLabels[period]}`;
+    taskStatsTitle.textContent = `Nach Aufgabe · ${periodLabels[period]}`;
   }
 
   function renderEntry(e) {
@@ -2358,25 +2439,6 @@
     `;
   }
 
-  function renderRecentEntries() {
-    const recent = state.entries.slice(0, 5);
-    if (recent.length === 0) {
-      recentEntries.innerHTML = `
-        <div class="empty-state">
-          <i data-lucide="clock"></i>
-          <div>Noch keine erfassten Zeiten</div>
-        </div>
-      `;
-      if (window.lucide) lucide.createIcons();
-      return;
-    }
-    recentEntries.innerHTML = recent.map(renderEntry).join('');
-    if (window.lucide) lucide.createIcons();
-    recentEntries.querySelectorAll('.detail-note-input').forEach(ta => {
-      if (typeof autoGrow === 'function') autoGrow(ta);
-    });
-  }
-
   function renderAllEntries() {
     if (state.entries.length === 0) {
       allEntries.innerHTML = `
@@ -2416,11 +2478,16 @@
   }
 
   function renderStats() {
-    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recent = state.entries.filter(e => e.start >= cutoff);
+    const period = state.activePeriod || 'day';
+    const range = getPeriodRange(period);
+    const recent = state.entries.filter(e =>
+      e.start >= range.start && e.start <= range.end &&
+      e.category !== 'pomopause'
+    );
 
+    const periodLabels = { day: 'heute', week: 'dieser Woche', month: 'diesem Monat', year: 'diesem Jahr' };
     if (recent.length === 0) {
-      categoryStats.innerHTML = '<div class="empty-state"><div>Keine Daten in den letzten 30 Tagen</div></div>';
+      categoryStats.innerHTML = `<div class="empty-state"><div>Keine Daten in ${periodLabels[period]}</div></div>`;
       taskStats.innerHTML = '';
       return;
     }
@@ -2468,8 +2535,7 @@
   }
 
   function renderAll() {
-    renderTodayWeek();
-    renderRecentEntries();
+    renderPeriodStats();
     renderAllEntries();
     renderStats();
   }
@@ -2482,11 +2548,25 @@
       state.activeTab = target;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === target));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${target}`));
-      // Beim Wechsel zu Pomodoro: Anzeige aktualisieren
       if (target === 'pomodoro') {
         if (!state.pomoState.running) renderPomoIdle();
         renderPomoToday();
+      } else if (target === 'auswertung') {
+        renderPeriodStats();
+        renderStats();
       }
+    });
+  });
+
+  // Period-Tabs in der Auswertung
+  document.querySelectorAll('.period-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const period = tab.dataset.period;
+      if (period === state.activePeriod) return;
+      state.activePeriod = period;
+      document.querySelectorAll('.period-tab').forEach(t => t.classList.toggle('active', t.dataset.period === period));
+      renderPeriodStats();
+      renderStats();
     });
   });
 
@@ -2549,11 +2629,9 @@
     if (!entryEl) return;
     const id = parseInt(entryEl.dataset.id);
     state.openEntryId = state.openEntryId === id ? null : id;
-    renderRecentEntries();
     renderAllEntries();
   }
 
-  recentEntries.addEventListener('click', handleEntryClick);
   allEntries.addEventListener('click', handleEntryClick);
 
   // Notiz-Editierung in aufgeklapptem Detail speichern (blur = Fokus verloren)
@@ -3368,9 +3446,9 @@
   // ========================================
 
 
-  // Periodic update for today/week totals while running
+  // Periodic update for stats while running
   setInterval(() => {
-    if (state.running && !state.paused) renderTodayWeek();
+    if (state.running && !state.paused) renderPeriodStats();
   }, 30000);
 
   // === Init ===
