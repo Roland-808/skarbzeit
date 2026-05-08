@@ -18,6 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -1329,7 +1330,7 @@
         </button>
       </div>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-      <input type="file" id="galleryInput" accept="image/*" multiple style="display:none;">
+      <input type="file" id="galleryInput" accept="image/*,.heic,.heif" multiple style="display:none;">
       <div class="attachment-preview" id="attachmentPreview"></div>
 
       <div class="actions" id="actions">
@@ -1924,21 +1925,67 @@
 
   async function handleFiles(files) {
     if (!files || files.length === 0) return;
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) continue;
+    let okCount = 0;
+    let failCount = 0;
+    let lastError = '';
+
+    for (const origFile of files) {
       try {
+        let file = origFile;
+
+        // Manche Galerie-Picker setzen file.type leer — anhand der Endung erkennen
+        const name = (file.name || '').toLowerCase();
+        const isHeif = file.type === 'image/heic' || file.type === 'image/heif'
+          || name.endsWith('.heic') || name.endsWith('.heif');
+
+        if (isHeif) {
+          if (typeof heic2any === 'undefined') {
+            throw new Error('HEIF-Konverter nicht geladen');
+          }
+          showToast('HEIF wird konvertiert…');
+          const converted = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.85
+          });
+          // heic2any kann Array oder einzelnen Blob zurückgeben
+          const blob = Array.isArray(converted) ? converted[0] : converted;
+          file = new File([blob], (file.name || 'foto') + '.jpg', { type: 'image/jpeg' });
+        } else {
+          // Wenn type leer ist (mancher Android-Picker), aber Endung passt → trotzdem versuchen
+          const looksLikeImage = file.type.startsWith('image/')
+            || /\.(jpe?g|png|gif|webp|bmp|avif)$/i.test(name);
+          if (!looksLikeImage) {
+            failCount++;
+            lastError = 'kein Bild';
+            continue;
+          }
+        }
+
         const dataUrl = await compressImage(file, 1280, 0.75);
         state.currentAttachments.push({
           id: Date.now() + Math.random(),
-          name: file.name,
+          name: origFile.name || 'Bild',
           dataUrl: dataUrl
         });
+        okCount++;
       } catch (err) {
-        showToast('Bild konnte nicht geladen werden');
+        failCount++;
+        lastError = (err && err.message) ? err.message : String(err);
+        console.error('Foto-Upload fehlgeschlagen:', err);
       }
     }
+
     renderAttachments();
     persistRunning();
+
+    if (okCount > 0 && failCount === 0) {
+      showToast(okCount === 1 ? 'Bild hinzugefügt' : `${okCount} Bilder hinzugefügt`);
+    } else if (okCount > 0 && failCount > 0) {
+      showToast(`${okCount} ok, ${failCount} fehlgeschlagen`);
+    } else if (failCount > 0) {
+      showToast(`Fehler: ${lastError}`);
+    }
   }
 
   cameraInput.addEventListener('change', async (e) => {
@@ -1958,27 +2005,35 @@
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round(height * maxDim / width);
-              width = maxDim;
-            } else {
-              width = Math.round(width * maxDim / height);
-              height = maxDim;
+          try {
+            let { width, height } = img;
+            if (!width || !height) {
+              reject(new Error('Bild ohne Maße'));
+              return;
             }
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round(height * maxDim / width);
+                width = maxDim;
+              } else {
+                width = Math.round(width * maxDim / height);
+                height = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } catch (err) {
+            reject(err);
           }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
         };
-        img.onerror = reject;
+        img.onerror = () => reject(new Error('Bildformat nicht unterstützt'));
         img.src = e.target.result;
       };
-      reader.onerror = reject;
+      reader.onerror = () => reject(new Error('Datei nicht lesbar'));
       reader.readAsDataURL(file);
     });
   }
