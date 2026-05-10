@@ -172,80 +172,44 @@
   }
   .icon-btn:active { color: var(--accent); }
 
-  .theme-slider {
-    background: none;
-    border: none;
+  /* === Skarb-Style Theme-Pill === */
+  .theme-pill {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    width: 56px;
+    height: 28px;
     padding: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s;
   }
-  .theme-slider-track {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 56px;
-    height: 28px;
-    border-radius: 999px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 0 7px;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .theme-slider-icon {
+  .theme-pill-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 2px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 11px;
-    height: 11px;
-    color: var(--text3);
+    color: var(--accent);
     pointer-events: none;
-    z-index: 1;
-    transition: color 0.25s;
   }
-  /* Aktives Icon hervorheben */
-  [data-theme="light"] .theme-slider-icon-sun { color: var(--accent); }
-  [data-theme="dark"]  .theme-slider-icon-moon { color: var(--accent); }
-
-  .theme-slider-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--card);
-    border: 1px solid var(--border2);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+  .theme-pill-icon svg {
+    width: 14px;
+    height: 14px;
+    display: block;
   }
-  /* Im Dark-Mode: Thumb rechts (auf dem Mond) */
-  [data-theme="dark"] .theme-slider-thumb {
-    transform: translateX(28px);
-  }
-  /* Im Light-Mode: Thumb links (auf der Sonne) */
-  [data-theme="light"] .theme-slider-thumb {
-    transform: translateX(0);
-  }
-
   @media (hover: hover) {
-    .theme-slider:hover .theme-slider-track {
-      border-color: var(--border2);
+    .theme-pill:hover {
+      background: var(--accent-dim);
     }
   }
-  .theme-slider:active .theme-slider-thumb {
-    transform-origin: center;
-  }
-  [data-theme="dark"] .theme-slider:active .theme-slider-thumb {
-    transform: translateX(28px) scale(0.95);
-  }
-  [data-theme="light"] .theme-slider:active .theme-slider-thumb {
-    transform: translateX(0) scale(0.95);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .theme-slider-thumb { transition: none; }
+  .theme-pill:active {
+    background: var(--accent-dim);
   }
 
   /* === Toolbar === */
@@ -1513,20 +1477,12 @@
       <div class="brand-sub">Zeit · Fokus · Notizen</div>
     </div>
   </div>
-  <button class="theme-slider" id="themeToggle" role="switch" aria-label="Theme wechseln" aria-checked="false">
-    <span class="theme-slider-track">
-      <span class="theme-slider-icon theme-slider-icon-sun" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-        </svg>
-      </span>
-      <span class="theme-slider-icon theme-slider-icon-moon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-        </svg>
-      </span>
-      <span class="theme-slider-thumb"></span>
+  <button class="theme-pill" id="themeToggle" aria-label="Theme wechseln">
+    <span class="theme-pill-icon" id="themePillIcon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Default: Moon (für Dark-Mode) -->
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
     </span>
   </button>
 </header>
@@ -1884,11 +1840,19 @@
   const taskStats = $('taskStats');
 
   // === Theme ===
+  const SUN_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  const MOON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.theme);
     document.querySelector('meta[name="theme-color"]').setAttribute('content', state.theme === 'dark' ? '#0e1018' : '#f5f5f4');
     const btn = document.getElementById('themeToggle');
     if (btn) btn.setAttribute('aria-checked', state.theme === 'dark' ? 'true' : 'false');
+    const iconSpan = document.getElementById('themePillIcon');
+    if (iconSpan) {
+      // Dunkelmodus → Mond zeigen, Hellmodus → Sonne (wie in Skarb)
+      iconSpan.innerHTML = state.theme === 'dark' ? MOON_SVG : SUN_SVG;
+    }
   }
 
   document.getElementById('themeToggle').addEventListener('click', (e) => {
